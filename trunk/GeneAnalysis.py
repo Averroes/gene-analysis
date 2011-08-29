@@ -1,3 +1,1 @@
-__author__ = 'mgeb1 and cwhi19'
-#is that you monash login?
-  
+__author__ = 'cwhi19 and mgeb1'
