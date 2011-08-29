@@ -1,2 +1,1 @@
-#test main file
-#
+__author__ = 'cwhi19 and mgeb1'
