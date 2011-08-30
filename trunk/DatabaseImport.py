@@ -2,7 +2,7 @@ import os,re
 
 __author__ = 'cwhi19 and mgeb1'
 
-def getMiRNA(self,geneX):
+def getMiRNA(geneX):
     """This function opens the simplified miRNA database,
     used for returning a dictionary of MiRNA and the genes they affect,
     as well as the MiRNAs that target the subject gene."""
@@ -20,7 +20,7 @@ def getMiRNA(self,geneX):
 
     return miRNAs,mirnaDic
 
-def getTF(self,geneX):
+def getTF(geneX):
     """"This function opens the simplified TF database,
     used for returning a dictionary of TFs and their targeted genes,
     as well as the TFs that target the subject gene."""
@@ -38,7 +38,7 @@ def getTF(self,geneX):
 
     return tfs,tfDic
 
-def convertMirnaData(self):
+def convertMirnaData():
     """Code to convert the 'mouse_predictions_S_C_aug2010.txt'
     TF Database to a simpler file."""
 
@@ -51,7 +51,7 @@ def convertMirnaData(self):
     MiGeneList.close()
     return
 
-def convertTfData(self):
+def convertTfData():
     """"Code to convert the 'MRNV101203.txt' miRNA
     Database to a simpler file."""
 
