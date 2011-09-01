@@ -55,7 +55,7 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
 
     #Needs to check if selected/current directory already exist. Ie - Override?
     if os.access(os.getcwd()+'\\'+str(geneX)+'\\',os.F_OK) and len(geneX):
-        window.feedback('Override?',"Files for This directory already exists.\nDo you want to override these files?")
+        window.confirm('Override?',"Files for This directory already exists.\nDo you want to override these files?")
 
     window.feedback('Finding MiRNA\'s and their targeted genes, associated with ' + str(geneX) + '.')
     Mirnas,mirnaDic = getMiRNA(geneX)
