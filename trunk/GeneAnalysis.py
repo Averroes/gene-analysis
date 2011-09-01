@@ -3,7 +3,7 @@ import os
 
 __author__ = 'cwhi19 and mgeb1'
 
-def writeData(geneX,intersections,enrichments):
+def writeData(geneX,intersections,enrichments,topMirnas):
     """After sorting the data, writes from the Program into text and csv files."""
     if os.access(os.getcwd()+'\\'+str(geneX)+'\\',os.F_OK) and len(geneX):
         removeDir(os.getcwd()+'\\'+str(geneX)+'\\')
@@ -11,10 +11,15 @@ def writeData(geneX,intersections,enrichments):
     txt.write('MiRNA:\tTF:\tEnrichment Score:\tLenOfGenes:\tGenes:') #Labels for each column.
     csv = open(os.getcwd()+'\\'+str(geneX)+' - Spreadsheet.csv')
     csv.write('MiRNA:\tTF:\tEnrichment Score:\tLenOfGenes:')
-    order=sorted(intersections,key=lambda x:x[1],reverse=True)
-    for combination in order:
+    txt2 = open(os.getcwd()+'\\'+str(geneX)+' - TopMirna\'s')
+    txt2.write('MiRNA:\tFrequency:')
+    orderedCombinations=sorted(intersections,key=lambda x:x[1],reverse=True)
+    for combination in orderedCombinations:
         txt.write('\n'+combination[0]+'\t'+combination[1]+'\t'+str(enrichments[combination])+'\t'+str(len(intersections[combination]))+'\t'+str(intersections[combination]))
         csv.write('\n'+combination[0]+','+combination[1]+','+str(enrichments[combination])+','+str(len(intersections[combination])))
+    for Mirna in topMirnas:
+        txt2.write('\n'+str(Mirna)+'\t'+str(topMirnas[Mirna]))
+    txt.close(),csv.close(),txt2.close()
     return
 
 def removeDir(dir):
@@ -23,6 +28,14 @@ def removeDir(dir):
         for file in files:
             os.remove(file)
         os.remove(directory)
+
+def getTop25(tfs,enrichments):
+    """Aim of this program is to return a frequency list for the top 25% of MiRNA's in each tf set of combinations."""
+    scores = {}
+    enrichSort = sorted(enrichments,key= lambda x:enrichments[x],reverse=True)
+    for TF in tfs:
+        pass
+    return
 
 def Program(geneX):
     """This Function runs all the other base functions for sorting
@@ -63,6 +76,7 @@ def Program(geneX):
         enrichment = float(len(intersections[combination]))/float(len(mirnaDic[combination[0]]))
         enrichments.update({combination:enrichment})
 
-    #Data is required to be sorted/ordered to put into files.
-    writeData(geneX,intersections,enrichments)
+    top25percent = getTop25()
+
+    writeData(geneX,intersections,enrichments,top25percent)
 
