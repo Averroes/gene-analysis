@@ -11,32 +11,35 @@ class Application:
     def __init__(self, root):
         self.font = ("Verdana", 8)
         self.fontBold = ("Verdana", 8, "bold")
+        self.state = 0
 
         # create analyser form
 
         self.analyserForm = Frame(root)
         self.analyserForm.grid(row=0, column=0, sticky=W)
-        self.analyserForm.bind("<Return>", self.analyse)
+        root.bind("<Return>", self.submit)
 
+        self.geneNameVar = StringVar()
+        self.geneNameVar.trace(mode="w", callback=self.updateOutput)
         Label(self.analyserForm, text="Gene Name:", font=self.font).grid(row=0, column=0, sticky=W)
-        self.geneName = Entry(self.analyserForm)
+        self.geneName = Entry(self.analyserForm, textvariable=self.geneNameVar)
         self.geneName.grid(row=0, column=1, columnspan=2, sticky=W)
         self.geneName.focus_set()
 
         Label(self.analyserForm, text="Simplified miRNA File:", font=self.font).grid(row=1, column=0, sticky=W)
         self.miRNAFile = Entry(self.analyserForm)
         self.miRNAFile.grid(row=1, column=1, sticky=W)
-        Button(self.analyserForm, text="Browse", command=self.choosemiRNA).grid(row=1, column=2, sticky=W)
+        Button(self.analyserForm, text="Browse", command=self.choosemiRNA, takefocus=FALSE).grid(row=1, column=2, sticky=W)
 
         Label(self.analyserForm, text="Simplified TF File:", font=self.font).grid(row=2, column=0, sticky=W)
         self.TFFile = Entry(self.analyserForm)
         self.TFFile.grid(row=2, column=1, sticky=W)
-        Button(self.analyserForm, text="Browse", command=self.chooseTF).grid(row=2, column=2, sticky=W)
+        Button(self.analyserForm, text="Browse", command=self.chooseTF, takefocus=FALSE).grid(row=2, column=2, sticky=W)
 
         Label(self.analyserForm, text="Output directory:", font=self.font).grid(row=3, column=0, sticky=W)
         self.outputFolder = Entry(self.analyserForm)
         self.outputFolder.grid(row=3, column=1, sticky=W)
-        Button(self.analyserForm, text="Browse", command=self.chooseOutput).grid(row=3, column=2, sticky=W)
+        Button(self.analyserForm, text="Browse", command=self.chooseOutput, takefocus=FALSE).grid(row=3, column=2, sticky=W)
 
         Button(self.analyserForm, text="Analyse", font=self.fontBold, command=self.analyse).grid(row=4, column=0, columnspan=3, padx=20, pady=20, ipadx=10, ipady=5, sticky=E)
 
@@ -64,7 +67,11 @@ class Application:
 
             self.updateSettings()
 
-    def analyse(self, *args):
+    def submit(self, *args):
+        if not self.state:
+            self.analyse()
+
+    def analyse(self):
         self.settings.set('locations', 'miRNA', self.miRNAFile.get())
         self.settings.set('locations', 'TF', self.TFFile.get())
         self.updateSettings()
@@ -88,7 +95,7 @@ class Application:
     def chooseOutput(self):
         replaceEntryText(self.outputFolder, askdirectory())
 
-    def updateOutput(self):
+    def updateOutput(self, *args):
         replaceEntryText(self.outputFolder, "Output/" + self.geneName.get() + "/")
 
 def replaceEntryText(widget, text):
