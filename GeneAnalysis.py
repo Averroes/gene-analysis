@@ -29,13 +29,25 @@ def removeDir(dir):
             os.remove(file)
         os.remove(directory)
 
-def getTop25(tfs,enrichments):
+def getTop25(tfs,miRNAs,enrichments, percentile = 25):
     """Aim of this program is to return a frequency list for the top 25% of MiRNA's in each tf set of combinations."""
     scores = {}
     enrichSort = sorted(enrichments,key= lambda x:enrichments[x],reverse=True)
+    percentile = percentile*len(miRNAs)/100
+    topmiRNAs = {}
     for TF in tfs:
-        pass
-    return
+        x = 0
+        for element in enrichSort:
+            if element[1] == TF:
+                if topmiRNAs.has_key(element[0]):
+                    topmiRNAs[element[0]] += 1
+                else:
+                    topmiRNAs[element[0]] = 1
+                x += 1
+            if not x <= percentile:
+                break
+
+    return topmiRNAs
 
 def Program(geneX):
     """This Function runs all the other base functions for sorting
