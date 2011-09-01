@@ -30,8 +30,8 @@ def removeDir(dir):
         os.remove(directory)
 
 def getTop25(tfs,miRNAs,enrichments, percentile = 25):
-    """Aim of this program is to return a frequency list for the top 25% of MiRNA's in each tf set of combinations."""
-    scores = {}
+    """This program returns a frequency dictionary for the top 25% of MiRNA's in each tf set of combinations.
+    Should return the most common and most important MiRNA's specific to gene X. Data is used for Word Cloud"""
     enrichSort = sorted(enrichments,key= lambda x:enrichments[x],reverse=True)
     percentile = percentile*len(miRNAs)/100
     topmiRNAs = {}
@@ -49,46 +49,62 @@ def getTop25(tfs,miRNAs,enrichments, percentile = 25):
 
     return topmiRNAs
 
-def Program(geneX):
+def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
     """This Function runs all the other base functions for sorting
      and dealing with the Database Data to return results to the user."""
 
-    #Needs to check
+    #Needs to check if selected/current directory already exist. Ie - Override?
     if os.access(os.getcwd()+'\\'+str(geneX)+'\\',os.F_OK) and len(geneX):
-        print "Files for This directory already exists."
-        print "Do you want to override these files?" #Needs to have input to the GUI!
-        answer = input('>')
-        if not answer == 'True': #Needs to become less specific answer...
-            return False
+        window.feedback('Override?',"Files for This directory already exists.\nDo you want to override these files?")
 
+    window.feedback('Finding MiRNA\'s and their targeted genes, associated with ' + str(geneX) + '.')
     Mirnas,mirnaDic = getMiRNA(geneX)
     if not len(Mirnas):
-        return False #If there are no results, no point in proceeding.
+        return MirnaError('MirnaError: There are no Mirna\'s found for ' + str(geneX)) #If there are no results, no point in proceeding.
     else:
-        #To provide feedback to the user - Needs to be incorporated with GUI
-        print "There are",str(len(Mirnas)),'miRNA\'s targeting', str(geneX)
+        #To provide feedback to the user - Incorperated with Interface
+        window.feedback("There are "+str(len(Mirnas))+' miRNA\'s targeting '+str(geneX))
 
-
+    window.feedback('Finding TF\'s and their targeted genes, associated with ' + str(geneX) + '.')
     Tfs,tfDic = getTF(geneX)
     if not len(Tfs):
-        return False
+        return TfError('TfError: There are no TF\'s found for ' + str(geneX))
     else:
-        #To provide feedback to the user - Needs to be incorporated with GUI
-        print "There are",str(len(Tfs)),'TF\'s targeting', str(geneX)
+        #To provide feedback to the user - Now Incorperated with UserInterface
+        window.feedback("There are "+str(len(Tfs))+' TF\'s targeting '+str(geneX))
 
-    intersections = {} #Dictionary for all combinations of TF and miRNA. Key = (Mirna,TF) and Combinations = [...]
+    window.feedback('Creating Interections between Mirna\'s and Tf\'s.')
+    intersections = {} #Dictionary for all combinations of TF and miRNA. Key = (Mirna,TF) and Value = [Genes...]
     for mirna in Mirnas:
         for tf in Tfs:
             combinationName = (mirna,tf)
             intersection = list(set(mirnaDic[mirna]).intersection(set(tfDic[tf]))).sort()
             intersections.update({combinationName:intersection})
 
+    window.feedback('Generating Enrichment Scores for all intersections.')
     enrichments = {} #Dictionary for all combinations and their "Enrichment" score.
     for combination in intersections.keys():
         enrichment = float(len(intersections[combination]))/float(len(mirnaDic[combination[0]]))
-        enrichments.update({combination:enrichment})
+        enrichments.update({combination:enrichment}) #Creates form Key = (Mirna,TF) and Value = Enrichment Integer
 
-    top25percent = getTop25()
+    #Obtains the top 25% of each TF's mirna's based on enrichment score, returning them as a frequency dictionary.
+    window.feedback('Obtaining frequency list of most common MiRNA\'s for '+str(geneX))
+    top25percent = getTop25(Tfs,Mirnas,enrichments)
 
+    #Writes the data to files.
+    window.feedback()
     writeData(geneX,intersections,enrichments,top25percent)
 
+class TfError(Exception):
+    """Used to return Errors when no TF's are found for GeneX."""
+    def __init__(self,value):
+        self.value=value
+    def __str__(self):
+        return repr(self.value)
+
+class MirnaError(Exception):
+    """Used to return Errors when no Mirna's are found for GeneX."""
+    def __init__(self,value):
+        self.value=value
+    def __str__(self):
+        return repr(self.value)
