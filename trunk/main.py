@@ -83,17 +83,20 @@ class Application:
             self.updateSettings()
 
     def analyse(self):
-        geneToBeAnalysed = -1
+        genesToBeAnalysed = []
         i = 0
         for gene in self.geneQueue:
-            if geneToBeAnalysed == -1 and gene.progress != 2:
-                geneToBeAnalysed = i
+            if gene.progress != 3:
+                gene.progress = 1
+                genesToBeAnalysed += [gene]
             i += 1
 
-        if geneToBeAnalysed == -1:
+        if not len(genesToBeAnalysed):
             self.setStatus("No genes have been queued for analysis.")
         else:
-            self.geneQueue[geneToBeAnalysed].runAnalysis()
+            self.setStatus("Analysing...")
+            thread = AnalyserThread(genesToBeAnalysed)
+            thread.start()
 
     def refreshGeneList(self):
         self.geneList.destroy()
@@ -101,7 +104,7 @@ class Application:
         self.geneList.grid(row=0, column=1, sticky=W)
 
         i = 0
-        statusColours = [ "blue", "#DD0", "green" ]
+        statusColours = [ "black", "blue", "#DD0", "green" ]
         for gene in self.geneQueue:
             tab = Button(self.geneList, text=gene.geneName, anchor=W, fg=statusColours[gene.progress], font=(self.fontBold if i == self.currentGene else self.font), command=lambda index=i: self.selectGene(index))
             tab.grid(row=0, column=i+1, sticky=W)
@@ -173,22 +176,21 @@ class GeneMember:
     def confirm(self, title, question):
         return askyesno(title=title, message=question)
 
-    def runAnalysis(self):
-        thread = AnalyserThread(self.geneName, self.miRNA, self.TF, self.destination, self)
-        thread.start()
-
 class AnalyserThread(threading.Thread):
-    def __init__(self, geneName, miRNA, TF, destination, memberClass):
+    def __init__(self, genes):
         threading.Thread.__init__(self)
-        self.geneName, self.miRNA, self.TF, self.destination, self.memberClass = geneName, miRNA, TF, destination, memberClass
+        self.genes = genes
 
     def run(self):
-        self.memberClass.progress = 1
-        self.memberClass.window.refreshGeneList()
+        for gene in self.genes:
+            gene.progress = 2
+            gene.window.refreshGeneList()
 
-        GeneAnalysis.Program(self.geneName, self.miRNA, self.TF, self.destination, self.memberClass)
+            GeneAnalysis.Program(gene.geneName, gene.miRNA, gene.TF, gene.destination, gene)
 
-        self.memberClass.progress = 2
+            gene.progress = 3
+        gene.window.refreshGeneList()
+        self.genes[0].window.setStatus("Finished analysis.")
 
 def replaceEntryText(widget, text):
     widget.delete(0, END)
