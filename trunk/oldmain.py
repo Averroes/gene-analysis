@@ -1,5 +1,8 @@
 __author__ = 'cwhi19 and mgeb1'
 
+
+# NOW OBSOLETE
+
 settingsLocation = "settings.ini"
 
 from Tkinter import *
