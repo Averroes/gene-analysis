@@ -3,15 +3,15 @@ import os
 
 __author__ = 'cwhi19 and mgeb1'
 
-def writeData(geneX,intersections,enrichments,topMirnas):
+def writeData(geneX,intersections,enrichments,topMirnas,destination):
     """After sorting the data, writes from the Program into text and csv files."""
-    if os.access(os.getcwd()+'\\'+str(geneX)+'\\',os.F_OK) and len(geneX):
-        removeDir(os.getcwd()+'\\'+str(geneX)+'\\')
-    txt = open(os.getcwd()+'\\'+str(geneX)+' - Results.txt')
+    if os.access(destination+'\\'+str(geneX)+'\\',os.F_OK) and len(geneX):
+        removeDir(destination+'\\'+str(geneX)+'\\')
+    txt = open(destination+'\\'+str(geneX)+' - Results.txt')
     txt.write('MiRNA:\tTF:\tEnrichment Score:\tLenOfGenes:\tGenes:') #Labels for each column.
-    csv = open(os.getcwd()+'\\'+str(geneX)+' - Spreadsheet.csv')
+    csv = open(destination+'\\'+str(geneX)+' - Spreadsheet.csv')
     csv.write('MiRNA:\tTF:\tEnrichment Score:\tLenOfGenes:')
-    txt2 = open(os.getcwd()+'\\'+str(geneX)+' - TopMirna\'s')
+    txt2 = open(destination+'\\'+str(geneX)+' - TopMirna\'s')
     txt2.write('MiRNA:\tFrequency:')
     orderedCombinations=sorted(intersections,key=lambda x:x[1],reverse=True)
     for combination in orderedCombinations:
@@ -54,11 +54,16 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
      and dealing with the Database Data to return results to the user."""
 
     #Needs to check if selected/current directory already exist. Ie - Override?
-    if os.access(os.getcwd()+'\\'+str(geneX)+'\\',os.F_OK) and len(geneX):
-        window.confirm('Override?',"Files for This directory already exists.\nDo you want to override these files?")
+    if destinationFolder[-1] == '/':
+        #Removes extra forward slash if it exists.
+        destinationFolder = destinationFolder[0:len(destinationFolder)-1]
+    if os.access(destinationFolder+'\\'+str(geneX)+'\\',os.F_OK) and len(geneX):
+        if not window.confirm('Override?',"Files for This directory already exists.\nDo you want to override these files?"):
+            window.feedback('Directory will not be Overridden.')
+            return False
 
     window.feedback('Finding MiRNA\'s and their targeted genes, associated with ' + str(geneX) + '.')
-    Mirnas,mirnaDic = getMiRNA(geneX)
+    Mirnas,mirnaDic = getMiRNA(geneX,mirnaLoc)
     if not len(Mirnas):
         return MirnaError('MirnaError: There are no Mirna\'s found for ' + str(geneX)) #If there are no results, no point in proceeding.
     else:
@@ -66,7 +71,7 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
         window.feedback("There are "+str(len(Mirnas))+' miRNA\'s targeting '+str(geneX))
 
     window.feedback('Finding TF\'s and their targeted genes, associated with ' + str(geneX) + '.')
-    Tfs,tfDic = getTF(geneX)
+    Tfs,tfDic = getTF(geneX,tfLoc)
     if not len(Tfs):
         return TfError('TfError: There are no TF\'s found for ' + str(geneX))
     else:
@@ -93,7 +98,8 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
 
     #Writes the data to files.
     window.feedback()
-    writeData(geneX,intersections,enrichments,top25percent)
+    writeData(geneX,intersections,enrichments,top25percent,destinationFolder)
+    return True
 
 class TfError(Exception):
     """Used to return Errors when no TF's are found for GeneX."""

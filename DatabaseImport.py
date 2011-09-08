@@ -2,12 +2,12 @@ import os,re
 
 __author__ = 'cwhi19 and mgeb1'
 
-def getMiRNA(geneX):
+def getMiRNA(geneX,mirnaLoc):
     """This function opens the simplified miRNA database,
     used for returning a dictionary of MiRNA and the genes they affect,
     as well as the MiRNAs that target the subject gene."""
 
-    miRNA_Database = open(os.getcwd() + '\\Resources\\miRNA.txt','r')
+    miRNA_Database = open(mirnaLoc,'r')
     miRNAs = [] #List for MiRNAs targeting gene X
     mirnaDic = {} #Dictionary for all MiRNA and their targeted Genes.
     for line in miRNA_Database:
@@ -20,12 +20,12 @@ def getMiRNA(geneX):
             mirnaDic.update({mirna:mirnaDic[mirna]+[gene]}) if mirna in mirnaDic else mirnaDic.update({mirna:[gene]}) #Keeps duplicates in list, adds to previous lists.
     return miRNAs,mirnaDic
 
-def getTF(geneX):
+def getTF(geneX,tfLoc):
     """"This function opens the simplified TF database,
     used for returning a dictionary of TFs and their targeted genes,
     as well as the TFs that target the subject gene."""
 
-    TF_Database = open(os.getcwd() + '\\Resources\\TF.txt','r')
+    TF_Database = open(tfLoc,'r')
     tfs = [] #List for TFs targeting gene X
     tfDic = {} #Dictionary for all MiRNA and their targeted Genes.
     for line in TF_Database:
