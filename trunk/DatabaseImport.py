@@ -12,12 +12,12 @@ def getMiRNA(geneX):
     mirnaDic = {} #Dictionary for all MiRNA and their targeted Genes.
     for line in miRNA_Database:
         line = line.split('\t') #The document is in the form "Mirna [\t] Gene"
-        mirna  = line[0] #The MiRNA.
-        gene = line[1] #The target gene.
-        if gene == str(geneX):
-            miRNAs.append([mirna])
-        mirnaDic.update({mirna:mirnaDic[mirna]+[gene]}) if mirna in mirnaDic else mirnaDic.update({mirna:[gene]}) #Keeps duplicates in list, adds to previous lists.
-
+        if len(line) > 1:
+            mirna  = line[0] #The MiRNA.
+            gene = line[1] #The target gene.
+            if gene == str(geneX):
+                miRNAs.append([mirna])
+            mirnaDic.update({mirna:mirnaDic[mirna]+[gene]}) if mirna in mirnaDic else mirnaDic.update({mirna:[gene]}) #Keeps duplicates in list, adds to previous lists.
     return miRNAs,mirnaDic
 
 def getTF(geneX):
@@ -30,11 +30,12 @@ def getTF(geneX):
     tfDic = {} #Dictionary for all MiRNA and their targeted Genes.
     for line in TF_Database:
         line = line.split('\t') #Doc in same form as miRNA_Database.
-        TF = line[0]
-        gene = line[1]
-        if gene == geneX:
-            tfs.append(TF)
-        tfDic.update({TF:tfDic[TF] + [gene]}) if TF in tfDic else tfDic.update({TF:[gene]})
+        if len(line)>1:
+            TF = line[0]
+            gene = line[1]
+            if gene == geneX:
+                tfs.append(TF)
+            tfDic.update({TF:tfDic[TF] + [gene]}) if TF in tfDic else tfDic.update({TF:[gene]})
 
     return tfs,tfDic
 
