@@ -43,6 +43,7 @@ class Application(QWidget):
         self.grid.addWidget(self.analyseButton, 5, 0, 1, 3)
 
         self.queueTabs = QTabBar()
+        self.queueTabs.setTabsClosable(True)
         self.geneNumber = 0
         self.grid.addWidget(self.queueTabs, 6, 0, 1, 3)
 

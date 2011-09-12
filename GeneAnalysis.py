@@ -4,14 +4,17 @@ __author__ = 'cwhi19 and mgeb1'
 
 def writeData(geneX,intersections,enrichments,topMirnas,destination):
     """After sorting the data, writes from the Program into text and csv files."""
-    if os.access(destination+'\\',os.F_OK) and len(geneX):
-        removeDir(destination)
-    os.mkdir(destination)
-    txt = open(destination+'\\'+str(geneX)+' - Results.txt','w')
+    folderList = destination.split('/')
+    runningDirectory = ''
+    for folder in folderList:
+        runningDirectory += folder + '/'
+        if not os.access(folder,os.R_OK):
+            os.mkdir(runningDirectory)
+    txt = open(destination+'/'+str(geneX)+' - Results.txt','w')
     txt.write('MiRNA:\tTF:\tEnrichment Score:\tLenOfGenes:\tGenes:') #Labels for each column.
-    csv = open(destination+'\\'+str(geneX)+' - Spreadsheet.csv','w')
+    csv = open(destination+'/'+str(geneX)+' - Spreadsheet.csv','w')
     csv.write('MiRNA:\tTF:\tEnrichment Score:\tLenOfGenes:')
-    txt2 = open(destination+'\\'+str(geneX)+' - TopMirna\'s.txt','w')
+    txt2 = open(destination+'/'+str(geneX)+' - TopMirna\'s.txt','w')
     txt2.write('MiRNA:\tFrequency:')
     orderedCombinations=sorted(intersections,key=lambda x:len(intersections[x]),reverse=True)
     for combination in orderedCombinations:
@@ -59,7 +62,7 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
     if destinationFolder[-1] == '/':
         #Removes extra forward slash if exists
         destinationFolder = destinationFolder[0:len(destinationFolder)-1]
-    if os.access(destinationFolder+'\\',os.F_OK) and len(geneX):
+    if os.access(destinationFolder+'/',os.F_OK) and len(geneX):
         if not window.confirm('Override?',"Files for This directory already exists.\nDo you want to override these files?"):
             window.feedback('Directory will not be Overridden.')
             return False
