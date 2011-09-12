@@ -11,7 +11,7 @@ class Application(QWidget):
         self.setWindowTitle("Gene Analysis")
         self.grid = QGridLayout(self)
 
-        self.geneList = {}
+        self.geneList = []
 
         self.grid.addWidget(QLabel("Gene Name:"), 0, 0)
         self.geneNameInput = QLineEdit()
@@ -44,7 +44,6 @@ class Application(QWidget):
 
         self.queueTabs = QTabBar()
         self.queueTabs.setTabsClosable(True)
-        self.geneNumber = 0
         self.grid.addWidget(self.queueTabs, 6, 0, 1, 3)
 
         self.statuses = QLabel("")
@@ -58,6 +57,7 @@ class Application(QWidget):
         self.connect(self.queueButton, SIGNAL('clicked()'), self.addToQueue)
         self.connect(self.analyseButton, SIGNAL('clicked()'), self.analyse)
         self.connect(self.queueTabs, SIGNAL('currentChanged(int)'), self.updateStatuses)
+        self.connect(self.queueTabs, SIGNAL('tabCloseRequested(int)'), lambda x: self.removeGene(x))
 
         self.settings = ConfigParser.RawConfigParser()
         try:
@@ -75,36 +75,39 @@ class Application(QWidget):
             self.updateSettings()
 
     def analyse(self):
-        #TODO: add checking for whether there are items in a queue (that have not been analysed)
-        #TODO: make thread an attribute of the window, as opposed to the GeneMember
         #TODO: add statuses to tabs (ie. loading icon for "in progress", bold for finished)
         #TODO: add button to analyse results
-        #TODO: add ability to delete tabs
-        index = -1
-        for geneNumber in self.geneList:
-            if not self.geneList[geneNumber].progress and index == -1:
-                index = geneNumber
+        geneFound = False
+        for gene in self.geneList:
+            if not gene.progress and not geneFound:
+                geneFound = True
+                gene.finished.connect(self.analyse)
+                gene.start()
 
-        self.geneList[index].thread = AnalyserThread(self.geneList[index])
-        self.geneList[index].thread.finished.connect(self.analyse)
-        self.geneList[index].thread.start()
-
-        self.connect(self.geneList[index].thread, SIGNAL("updateStatuses()"), self.updateStatuses)
+                self.connect(gene, SIGNAL("updateStatuses()"), self.updateStatuses)
 
     def addToQueue(self):
         self.settings.set('locations', 'miRNA', self.miRNAFileInput.text())
         self.settings.set('locations', 'TF', self.TFFileInput.text())
         self.updateSettings()
 
-        self.geneList[self.geneNumber] = GeneMember(self.geneNameInput.text(), self.miRNAFileInput.text(), self.TFFileInput.text(), self.outputFolderInput.text(), self)
-        self.queueTabs.insertTab(self.geneNumber, self.geneNameInput.text())
-        self.geneNumber += 1
+        self.geneList += [AnalyserThread(self.geneNameInput.text(), self.miRNAFileInput.text(), self.TFFileInput.text(), self.outputFolderInput.text(), self)]
+        self.queueTabs.insertTab(-1, self.geneNameInput.text())
 
         self.geneNameInput.clear()
         self.outputFolderInput.clear()
 
+    def removeGene(self, geneId):
+        if self.geneList[geneId].progress != 1:
+            self.queueTabs.removeTab(geneId)
+            del self.geneList[geneId]
+            self.updateStatuses()
+
     def updateStatuses(self):
-        self.statuses.setText("<br />".join(self.geneList[self.queueTabs.currentIndex()].statuses))
+        if len(self.geneList) > 0:
+            self.statuses.setText("<br />".join(self.geneList[self.queueTabs.currentIndex()].statuses))
+        else:
+            self.statuses.setText("")
 
     def updateOutput(self, x):
         self.outputFolderInput.setText("Output/" + x + "/")
@@ -129,27 +132,16 @@ class Application(QWidget):
                 self.addToQueue()
 
 class AnalyserThread(QThread):
-    #TODO: merge AnalyserThread and GeneMember
-    def __init__(self, gene):
-        QThread.__init__(self)
-        self.gene = gene
-
-    def run(self):
-        self.gene.progress = 1
-
-        GeneAnalysis.Program(self.gene.geneName, self.gene.miRNA, self.gene.TF, self.gene.destination, self.gene)
-
-        self.gene.progress = 2
-
-class GeneMember:
     def __init__(self, geneName, miRNA, TF, destination, window):
+        QThread.__init__(self)
+        
         self.geneName, self.miRNA, self.TF, self.destination, self.window = str(geneName), str(miRNA), str(TF), str(destination), window
         self.statuses = [ "Waiting..." ]
         self.progress = 0
 
     def feedback(self, string):
         self.statuses += [ string ]
-        self.thread.emit(SIGNAL("updateStatuses()"))
+        self.emit(SIGNAL("updateStatuses()"))
 
     def confirm(self, title, question):
         messageBox = QMessageBox()
@@ -158,6 +150,13 @@ class GeneMember:
         messageBox.setIcon(QMessageBox.Warning)
         messageBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         return True if messageBox.exec_() == 16384 else False
+
+    def run(self):
+        self.progress = 1
+
+        GeneAnalysis.Program(self.geneName, self.miRNA, self.TF, self.destination, self)
+
+        self.progress = 2
         
 
 app = QApplication(sys.argv)
