@@ -45,8 +45,8 @@ def convertMirnaData():
     """Code to convert the 'mouse_predictions_S_C_aug2010.txt'
     TF Database to a simpler file."""
 
-    mirnaDatabase = open(os.getcwd()+'\\mouse_predictions_S_C_aug2010.txt','r')
-    MiGeneList = open(os.getcwd() + '\\Resources\\migenelist.txt','w')
+    mirnaDatabase = open(os.getcwd()+'/mouse_predictions_S_C_aug2010.txt','r')
+    MiGeneList = open(os.getcwd() + '/Resources/migenelist.txt','w')
     for line in mirnaDatabase:
         data = re.search('(.*?)[ \t]+(.*?)[ \t]+(.*?)[ \t]+(.*?)[ \t](.*)',line,re.IGNORECASE)
         if type(data.group(2)).__name__ != 'None' and type(data.group(4)).__name__ != 'None':
@@ -58,8 +58,8 @@ def convertTfData():
     """"Code to convert the 'MRNV101203.txt' miRNA
     Database to a simpler file."""
 
-    tfDatabase = open(os.getcwd()+'\\MRNV101203.txt','r') #Data File.
-    TfGeneList = open(os.getcwd()+'\\Resources\\tfgenelist.txt','w') #Simple File.
+    tfDatabase = open(os.getcwd()+'/MRNV101203.txt','r') #Data File.
+    TfGeneList = open(os.getcwd()+'/Resources/tfgenelist.txt','w') #Simple File.
     for line in tfDatabase:
         data = re.search('(.*?)[ \t]+(.*?)[ \t]+(.*)[ \t]+(.*)[\n]+',line,re.IGNORECASE)
         if str(data.group(4)) == 'TF->Gene':
