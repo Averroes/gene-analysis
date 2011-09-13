@@ -34,6 +34,7 @@ class Application(QWidget):
         self.grid.addWidget(self.outputFolderInput, 3, 1)
         self.outputBrowse = QPushButton("Browse")
         self.grid.addWidget(self.outputBrowse, 3, 2)
+        self.outputSet = False
 
         self.queueButton = QPushButton("Add to queue")
         self.queueButton.setAutoDefault(True)
@@ -44,6 +45,7 @@ class Application(QWidget):
 
         self.queueTabs = QTabBar()
         self.queueTabs.setTabsClosable(True)
+        self.queueTabs.setMovable(True)
         self.grid.addWidget(self.queueTabs, 6, 0, 1, 3)
 
         self.statuses = QLabel("")
@@ -58,6 +60,7 @@ class Application(QWidget):
         self.connect(self.analyseButton, SIGNAL('clicked()'), self.analyse)
         self.connect(self.queueTabs, SIGNAL('currentChanged(int)'), self.updateStatuses)
         self.connect(self.queueTabs, SIGNAL('tabCloseRequested(int)'), lambda x: self.removeGene(x))
+        self.connect(self.queueTabs, SIGNAL('tabMoved(int,int)'), lambda x, y: self.moveGene(x, y))
 
         self.settings = ConfigParser.RawConfigParser()
         try:
@@ -75,9 +78,9 @@ class Application(QWidget):
             self.updateSettings()
 
     def analyse(self):
-        #TODO: add statuses to tabs (ie. loading icon for "in progress", bold for finished)
         #TODO: add button to analyse results
         geneFound = False
+        self.outputSet = False
         for gene in self.geneList:
             if not gene.progress and not geneFound:
                 geneFound = True
@@ -103,6 +106,9 @@ class Application(QWidget):
             del self.geneList[geneId]
             self.updateStatuses()
 
+    def moveGene(self, initial, final):
+        self.geneList.insert(final, self.geneList.pop(initial))
+
     def updateStatuses(self):
         if len(self.geneList) > 0:
             self.statuses.setText("<br />".join(self.geneList[self.queueTabs.currentIndex()].statuses))
@@ -110,7 +116,10 @@ class Application(QWidget):
             self.statuses.setText("")
 
     def updateOutput(self, x):
-        self.outputFolderInput.setText("Output/" + x + "/")
+        if not len(self.outputFolderInput.text()):
+            self.outputSet = False
+        if not self.outputSet:
+            self.outputFolderInput.setText("Output/" + x + "/")
 
     def chooseFile(self, textbox):
         file = QFileDialog.getOpenFileName(self, "Select file")
@@ -121,6 +130,7 @@ class Application(QWidget):
         folder = QFileDialog.getExistingDirectory(self, "Select folder")
         if len(folder):
             textbox.setText(folder)
+            self.outputSet = True
 
     def updateSettings(self):
         with open(settingsLocation, "wb") as settingsFile:
