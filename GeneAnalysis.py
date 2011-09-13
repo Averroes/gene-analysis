@@ -10,8 +10,8 @@ def writeData(geneX,intersections,enrichments,topMirnas,destination):
         runningDirectory += folder + '/'
         if not os.access(folder,os.R_OK):
             os.mkdir(runningDirectory)
-    txt = open(destination+'/'+str(geneX)+' - Results.txt','w')
-    txt.write('MiRNA:\tTF:\tEnrichment Score:\tLenOfGenes:\tGenes:') #Labels for each column.
+    txt = open(destination+'/'+str(geneX)+' - Results.txt','w') #All files named with Gene Name, and
+    txt.write('MiRNA:\tTF:\tEnrichment Score:\tLenOfGenes:\tGenes:') #Titles for each column.
     csv = open(destination+'/'+str(geneX)+' - Spreadsheet.csv','w')
     csv.write('MiRNA:\tTF:\tEnrichment Score:\tLenOfGenes:')
     txt2 = open(destination+'/'+str(geneX)+' - TopMirna\'s.txt','w')
@@ -83,23 +83,22 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
         #To provide feedback to the user - Now Incorperated with UserInterface
         window.feedback("There are "+str(len(Tfs))+' TF\'s targeting '+str(geneX)+'.')
 
-    window.feedback('Creating Intersections between Mirna\'s and Tf\'s.')
+    window.feedback('Creating Intersections between Mirna\'s and Tf\'s and Generating Enrichment Scores for all intersections.')
     intersections = {} #Dictionary for all combinations of TF and miRNA. Key = (Mirna,TF) and Value = [Genes...]
+    enrichments = {} #Dictionary for all combinations and their "Enrichment" score.
     for mirna in Mirnas:
         mirnaSet = set(mirnaDic[mirna])
         for tf in Tfs:
             combinationName = (mirna,tf)
+            #Generates intersection keys
             tfSet = set(tfDic[tf])
             intersection = sorted(list(mirnaSet.intersection(tfSet)))
             if not intersection:
                 return MirnaError('Not Intersections' + str(intersection))
-            intersections.update({combinationName:intersection})
-
-    window.feedback('Generating Enrichment Scores for all intersections.')
-    enrichments = {} #Dictionary for all combinations and their "Enrichment" score.
-    for combination in intersections.keys():
-        enrichment = float(len(intersections[combination]))/float(len(set(mirnaDic[combination[0]])))*100
-        enrichments.update({combination:enrichment}) #Creates form Key = (Mirna,TF) and Value = Enrichment Integer
+            intersections.update({combinationName:intersection}) #Creates form Key = (Mirna,TF) and Value = [Gene,Gene2,....]
+            #Generates enrichment score
+            enrichment = float(len(intersections[combinationName]))/float(len(set(mirnaDic[combinationName[0]])))*100
+            enrichments.update({combinationName:enrichment}) #Creates form Key = (Mirna,TF) and Value = Enrichment Integer
 
     #Obtains the top 25% of each TF's mirna's based on enrichment score, returning them as a frequency dictionary.
     window.feedback('Obtaining frequency list of most common MiRNA\'s for '+str(geneX))
@@ -108,7 +107,9 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
     #Writes the data to files.
     window.feedback('Writing Data To Files.')
     writeData(geneX,intersections,enrichments,top25percent,destinationFolder)
-    return True
+
+    window.feedback('Operations Completed Successfully.\nData saved to: '+str(destinationFolder))
+    return
 
 class TfError(Exception):
     """Used to return Errors when no TF's are found for GeneX."""
