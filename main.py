@@ -11,6 +11,11 @@ class Application(QWidget):
         self.setWindowTitle("Gene Analysis")
         self.grid = QGridLayout(self)
 
+        #TODO: Add a menu to the Window, to be able to open up previous data (Should save locations/previous files, in Settings.ini File)
+        #TODO: Help Cascade for Documentation
+        #TODO: Add a Load Setting option?
+        
+
         self.geneList = []
 
         self.grid.addWidget(QLabel("Gene Name:"), 0, 0)
