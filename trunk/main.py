@@ -1,6 +1,6 @@
 __author__ = 'cwhi19 and mgeb1'
 
-import sys, ConfigParser, GeneAnalysis
+import sys, ConfigParser, GeneAnalysis, DataRep
 from PyQt4.Qt import *
 
 settingsLocation = "settings.ini"
