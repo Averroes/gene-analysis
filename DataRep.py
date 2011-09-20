@@ -7,6 +7,7 @@ class DataRep(QWidget):
     def __init__(self, geneFolder, geneName):
         QWidget.__init__(self)
         self.setWindowTitle("Gene Data")
+        QWidget.setMinimumSize(self,800,400)
         self.grid = QGridLayout(self)
 
         self.processedData = []
@@ -36,13 +37,20 @@ class DataRep(QWidget):
         self.grid.addWidget(self.filterInput, 0, 3)
         self.connect(self.filterInput,SIGNAL("textChanged(QString)"),self.filterData)
 
-        self.dataTable = QTableWidget(len(self.processedData), len(headers))
+        self.dataTable = QTableWidget(1, len(headers))
         self.grid.addWidget(self.dataTable, 1, 0, 1, 4)
         self.dataTable.setHorizontalHeaderLabels(headers)
 
         self.orderOptions.setCurrentIndex(3)    
         self.connect(self.orderOptions,SIGNAL("currentIndexChanged(int)"),self.sortBy)
         self.filterData()
+        self.setColumnSizes()
+
+
+    def setColumnSizes(self):
+        size =  (int(str(QWidget.size(self)).split("(")[1].split(',')[0])-80)/self.dataTable.columnCount()
+        for head in range(0,self.dataTable.columnCount()):
+            self.dataTable.setColumnWidth(head,size)
 
     def filterData(self):
         self.writeableData = []
@@ -53,10 +61,14 @@ class DataRep(QWidget):
         self.sortBy()
 
     def sortBy(self):
-        #TODO: It would be handy perhaps to intake data as lists within lists. IE [[Mirna,TF,Enrich,Size],[Mirna,TF,Enrich,Size]...]
         index = self.orderOptions.currentIndex()
         self.writeableData = sorted(self.writeableData,key=lambda x: x[index],reverse=True if index > 1 else False)
         self.dataTable.clearContents()
+        if self.dataTable.rowCount():
+            for row in range(0,self.dataTable.rowCount()-1):
+                self.dataTable.removeRow(0)
+        for row in range(0,len(self.writeableData)-1):
+            self.dataTable.insertRow(0)
         row = 0
         for set in self.writeableData:
             column = 0
@@ -65,10 +77,3 @@ class DataRep(QWidget):
                 self.dataTable.setItem(row,column,Item)
                 column +=1
             row+=1
-
-app = QApplication(sys.argv)
-
-window = DataRep("Output/tnfaip3/", "tnfaip3")
-window.show()
-
-app.exec_()
