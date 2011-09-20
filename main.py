@@ -136,7 +136,6 @@ class Application(QWidget):
         currentGene = self.geneList[self.queueTabs.currentIndex()]
         self.dataWindow = DataRep.DataRep(currentGene.destination, currentGene.geneName)
         self.dataWindow.show()
-        self.dataWindow.exec_()
 
     def updateOutput(self, x):
         if not len(self.outputFolderInput.text()):
