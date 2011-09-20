@@ -8,14 +8,14 @@ def writeData(geneX,intersections,enrichments,topMirnas,destination):
     runningDirectory = ''
     for folder in folderList:
         runningDirectory += folder + '/'
-        if not os.access(folder,os.R_OK):
+        if not os.access(runningDirectory,os.R_OK):
             os.mkdir(runningDirectory)
     txt = open(destination+'/'+str(geneX)+' - Results.txt','w') #All files named with Gene Name, and
-    txt.write('MiRNA:\tTF:\tEnrichment Score:\tLenOfGenes:\tGenes:') #Titles for each column.
+    txt.write('MiRNA\tTF\tEnrichment Score\tNumber of Genes\tGenes') #Titles for each column.
     csv = open(destination+'/'+str(geneX)+' - Spreadsheet.csv','w')
-    csv.write('MiRNA:\tTF:\tEnrichment Score:\tLenOfGenes:')
+    csv.write('MiRNA,TF,Enrichment Score,Number of Genes')
     txt2 = open(destination+'/'+str(geneX)+' - TopMirna\'s.txt','w')
-    txt2.write('MiRNA:\tFrequency:')
+    txt2.write('MiRNA\tFrequency')
     orderedCombinations=sorted(intersections,key=lambda x:len(intersections[x]),reverse=True)
     for combination in orderedCombinations:
         txt.write('\n'+combination[0]+'\t'+combination[1]+'\t'+str(enrichments[combination])+'\t'+str(len(intersections[combination]))+'\t'+str(intersections[combination]))

@@ -57,12 +57,21 @@ class Application(QWidget):
         self.grid.addWidget(self.statuses, 7, 0, 1, 3)
         self.statuses.setAlignment(Qt.AlignTop)
 
+        self.statuses = QLabel("")
+        self.grid.addWidget(self.statuses, 7, 0, 1, 3)
+        self.statuses.setAlignment(Qt.AlignTop)
+
+        self.dataViewButton = QPushButton("View results")
+        self.grid.addWidget(self.dataViewButton, 8, 0, 1, 3)
+        self.dataViewButton.hide()
+
         self.connect(self.geneNameInput, SIGNAL('textChanged(QString)'), (lambda x: self.updateOutput(x)))
         self.connect(self.miRNABrowse, SIGNAL('clicked()'), lambda: self.chooseFile(self.miRNAFileInput))
         self.connect(self.TFBrowse, SIGNAL('clicked()'), lambda: self.chooseFile(self.TFFileInput))
         self.connect(self.outputBrowse, SIGNAL('clicked()'), lambda: self.chooseFolder(self.outputFolderInput))
         self.connect(self.queueButton, SIGNAL('clicked()'), self.addToQueue)
         self.connect(self.analyseButton, SIGNAL('clicked()'), self.analyse)
+        self.connect(self.dataViewButton, SIGNAL('clicked()'), self.viewData)
         self.connect(self.queueTabs, SIGNAL('currentChanged(int)'), self.updateStatuses)
         self.connect(self.queueTabs, SIGNAL('tabCloseRequested(int)'), lambda x: self.removeGene(x))
         self.connect(self.queueTabs, SIGNAL('tabMoved(int,int)'), lambda x, y: self.moveGene(x, y))
@@ -115,10 +124,19 @@ class Application(QWidget):
         self.geneList.insert(final, self.geneList.pop(initial))
 
     def updateStatuses(self):
+        self.dataViewButton.hide()
         if len(self.geneList) > 0:
             self.statuses.setText("<br />".join(self.geneList[self.queueTabs.currentIndex()].statuses))
+            if self.geneList[self.queueTabs.currentIndex()].progress == 2:
+                self.dataViewButton.show()
         else:
             self.statuses.setText("")
+
+    def viewData(self):
+        currentGene = self.geneList[self.queueTabs.currentIndex()]
+        self.dataWindow = DataRep.DataRep(currentGene.destination, currentGene.geneName)
+        self.dataWindow.show()
+        self.dataWindow.mainloop()
 
     def updateOutput(self, x):
         if not len(self.outputFolderInput.text()):
