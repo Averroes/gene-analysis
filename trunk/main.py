@@ -140,7 +140,7 @@ class Application(QMainWindow):
             self.statuses.setText("")
 
     def viewDataButton(self):
-        self.viewData(self.outputFolderInput.text())
+        self.viewData(self.geneList[self.queueTabs.currentIndex()].destination)
 
     def viewDataOpen(self):
         folder = QFileDialog.getExistingDirectory(self, "Select folder")
