@@ -79,7 +79,7 @@ class Application(QMainWindow):
         self.connect(self.outputBrowse, SIGNAL('clicked()'), lambda: self.chooseFolder(self.outputFolderInput))
         self.connect(self.queueButton, SIGNAL('clicked()'), self.addToQueue)
         self.connect(self.analyseButton, SIGNAL('clicked()'), self.analyse)
-        self.connect(self.dataViewButton, SIGNAL('clicked()'), lambda: self.viewData(self.outputFolderInput.text()))
+        self.connect(self.dataViewButton, SIGNAL('clicked()'), self.viewDataButton)
         self.connect(self.queueTabs, SIGNAL('currentChanged(int)'), self.updateStatuses)
         self.connect(self.queueTabs, SIGNAL('tabCloseRequested(int)'), lambda x: self.removeGene(x))
         self.connect(self.queueTabs, SIGNAL('tabMoved(int,int)'), lambda x, y: self.moveGene(x, y))
@@ -138,6 +138,9 @@ class Application(QMainWindow):
                 self.dataViewButton.show()
         else:
             self.statuses.setText("")
+
+    def viewDataButton(self):
+        self.viewData(self.outputFolderInput.text())
 
     def viewDataOpen(self):
         folder = QFileDialog.getExistingDirectory(self, "Select folder")
