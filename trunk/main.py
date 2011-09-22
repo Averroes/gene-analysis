@@ -15,12 +15,21 @@ class Application(QMainWindow):
 
         menubar = self.menuBar()
         fileMenu = menubar.addMenu("File")
-        exitAction = QAction("Open previously generated data...", self)
+        exitAction = QAction("Open data...", self) #Simplified from "previously generate", just for elagency. Should be self explainatory enough.
         exitAction.triggered.connect(self.viewDataOpen)
+        recentData = QMenu("Recent Data",self)
+        fileMenu.addMenu(recentData)
         fileMenu.addAction(exitAction)
+        helpMenu = menubar.addMenu("Help")
+        helpAction = QAction("Help Documentation",self)
+#        helpAction.triggered.connect()
+        helpMenu.addAction(helpAction)
 
-        #TODO: Add a menu to the Window, to be able to open up previous data (Should save locations/previous files, in Settings.ini File)
-        #TODO: Help Cascade for Documentation
+        #TODO: Recent files menu created, but program should save locations/previous files, in Settings.ini File
+        #TODO: so that the locations can be added if existing ---> use os.access(destination,os.R_OK)
+        #TODO: Then we can actually load previous generation data in the Settings.ini file, hopefully saving a lot of time!
+
+        #TODO: Create Help Documentation, cascade is created.
         #TODO: Add a Load Setting option?
         
 
