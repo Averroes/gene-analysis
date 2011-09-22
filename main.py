@@ -5,11 +5,19 @@ from PyQt4.Qt import *
 
 settingsLocation = "settings.ini"
 
-class Application(QWidget):
+class Application(QMainWindow):
     def __init__(self):
-        QWidget.__init__(self)
+        QMainWindow.__init__(self)
         self.setWindowTitle("Gene Analysis")
-        self.grid = QGridLayout(self)
+        self.mainWidget = QWidget(self)
+        self.setCentralWidget(self.mainWidget)
+        self.grid = QGridLayout(self.mainWidget)
+
+        menubar = self.menuBar()
+        fileMenu = menubar.addMenu("File")
+        exitAction = QAction("Open previously generated data...", self)
+        exitAction.triggered.connect(self.viewDataOpen)
+        fileMenu.addAction(exitAction)
 
         #TODO: Add a menu to the Window, to be able to open up previous data (Should save locations/previous files, in Settings.ini File)
         #TODO: Help Cascade for Documentation
@@ -71,7 +79,7 @@ class Application(QWidget):
         self.connect(self.outputBrowse, SIGNAL('clicked()'), lambda: self.chooseFolder(self.outputFolderInput))
         self.connect(self.queueButton, SIGNAL('clicked()'), self.addToQueue)
         self.connect(self.analyseButton, SIGNAL('clicked()'), self.analyse)
-        self.connect(self.dataViewButton, SIGNAL('clicked()'), self.viewData)
+        self.connect(self.dataViewButton, SIGNAL('clicked()'), lambda: self.viewData(self.outputFolderInput.text()))
         self.connect(self.queueTabs, SIGNAL('currentChanged(int)'), self.updateStatuses)
         self.connect(self.queueTabs, SIGNAL('tabCloseRequested(int)'), lambda x: self.removeGene(x))
         self.connect(self.queueTabs, SIGNAL('tabMoved(int,int)'), lambda x, y: self.moveGene(x, y))
@@ -92,7 +100,6 @@ class Application(QWidget):
             self.updateSettings()
 
     def analyse(self):
-        #TODO: add button to analyse results
         geneFound = False
         self.outputSet = False
         for gene in self.geneList:
@@ -132,9 +139,13 @@ class Application(QWidget):
         else:
             self.statuses.setText("")
 
-    def viewData(self):
-        currentGene = self.geneList[self.queueTabs.currentIndex()]
-        self.dataWindow = DataRep.DataRep(currentGene.destination, currentGene.geneName)
+    def viewDataOpen(self):
+        folder = QFileDialog.getExistingDirectory(self, "Select folder")
+        if len(folder):
+            self.viewData(folder)
+
+    def viewData(self, destination):
+        self.dataWindow = DataRep.DataRep(destination)
         self.dataWindow.show()
 
     def updateOutput(self, x):
