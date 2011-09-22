@@ -4,7 +4,13 @@ import sys, os
 from PyQt4.Qt import *
 
 class DataRep(QWidget):
-    def __init__(self, geneFolder, geneName):
+    def __init__(self, geneFolder):
+        geneName = geneFolder.replace('\\','/')
+        if geneName.split('/')[-1]:
+            geneName = geneName.split('/')[-1]
+        else:
+            if geneName.split('/')[-2]:
+                geneName = geneName.split('/')[-2]
         QWidget.__init__(self)
         self.setWindowTitle("Gene Data")
         QWidget.setMinimumSize(self,800,400)
@@ -77,3 +83,11 @@ class DataRep(QWidget):
                 self.dataTable.setItem(row,column,Item)
                 column +=1
             row+=1
+
+
+app = QApplication(sys.argv)
+
+window = DataRep('Output/Tnfaip3/')
+window.show()
+
+app.exec_()
