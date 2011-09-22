@@ -18,7 +18,7 @@ class DataRep(QWidget):
 
         self.processedData = []
 
-        dataFile = open(geneFolder + geneName + " - Spreadsheet.csv")
+        dataFile = open(geneFolder + ("" if geneFolder[-1] == '/' else "/") + geneName +  " - Spreadsheet.csv")
         headers = dataFile.readline().replace("\n", "").split(",")
         for line in dataFile:
             line = line.split(',')
