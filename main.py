@@ -17,8 +17,8 @@ class Application(QMainWindow):
         fileMenu = menubar.addMenu("File")
         exitAction = QAction("Open data...", self) #Simplified from "previously generate", just for elagency. Should be self explainatory enough.
         exitAction.triggered.connect(self.viewDataOpen)
-        self.recentData = QMenu("Recent Data",self)
-        fileMenu.addMenu(self.recentData)
+        self.recentDataMenu = QMenu("Recent Data",self)
+        fileMenu.addMenu(self.recentDataMenu)
         fileMenu.addAction(exitAction)
         helpMenu = menubar.addMenu("Help")
         helpAction = QAction("Help Documentation",self)
@@ -117,10 +117,10 @@ class Application(QMainWindow):
 #            for location in self.recentDataLoc:
 #                location += '/' if location[-1] != '/' else ''
 #                gene = location.split('/')[-2]
-#                vars()[location] = QAction(str(gene))
-#                vars()[location].triggered.connect(self.viewData(location))
-#                self.RecentData.addAction(vars()[location])
-#
+#                vars()[gene] = QAction(str(gene))
+#                vars()[gene].triggered.connect(self.viewData)
+#                self.recentDataMenu.addAction(vars()[gene])
+
 #        except ConfigParser.NoSectionError:
 #            self.recentDataLoc = []
 #            self.settings.add_section('recentData')
@@ -191,12 +191,12 @@ class Application(QMainWindow):
 #        for location in self.recentDataLoc:
 #            string += ',' if string != '' else ''
 #            string += location
-#        self.settings.set('recentData','Locations',self.recentDataLoc)
+#        self.settings.set('recentData','Locations',string)
 #        self.updateSettings()
 #
-#        vars()[folder] = QAction(str(gene),self)
-#        vars()[folder].triggered.connect(self.viewData(folder)) #Haven't fixed the bug yet, but could be because the connect has a variable call, usually you connect without the brackets.
-#        self.RecentData.addAction(vars()[folder])
+#        vars()[gene] = QAction(str(gene),self)
+#        vars()[gene].triggered.connect(self.viewData) #Haven't fixed the bug yet, but could be because the connect has a variable call, usually you connect without the brackets.
+#        self.recentDataMenu.addAction(vars()[gene])
 
     def updateOutput(self, x):
         if not len(self.outputFolderInput.text()):
