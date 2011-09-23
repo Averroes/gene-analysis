@@ -25,10 +25,6 @@ class Application(QMainWindow):
 #        helpAction.triggered.connect()
         helpMenu.addAction(helpAction)
 
-        #TODO: Recent files menu created, but program should save locations/previous files, in Settings.ini File
-        #TODO: so that the locations can be added if existing ---> use os.access(destination,os.R_OK)
-        #TODO: Then we can actually load previous generation data in the Settings.ini file, hopefully saving a lot of time!
-
         #TODO: Create Help Documentation, cascade is created.
         #TODO: Add a Load Setting option?
         
@@ -188,7 +184,8 @@ class Application(QMainWindow):
             self.recentDataLoc.pop(0)
         if len(self.recentDataLoc) > 9 and not folder in self.recentDataLoc:
             self.recentDataLoc.pop(0)
-        self.recentDataLoc += [folder]
+        if not folder in self.recentDataLoc:
+            self.recentDataLoc += [folder]
         string = ''
         for location in self.recentDataLoc:
             string += ',' if string != '' else ''
