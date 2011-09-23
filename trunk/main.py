@@ -108,24 +108,24 @@ class Application(QMainWindow):
 
             self.updateSettings()
 
-#        try:
-#            self.recentDataLoc = self.settings.get('recentData','Locations').split(',')
-#            for location in self.recentDataLoc:
-#                if not os.access(location,os.R_OK):
-#                    self.recentDataLoc.remove(location)
-#
-#            for location in self.recentDataLoc:
-#                location += '/' if location[-1] != '/' else ''
-#                gene = location.split('/')[-2]
-#                vars()[gene] = QAction(str(gene))
-#                vars()[gene].triggered.connect(self.viewData)
-#                self.recentDataMenu.addAction(vars()[gene])
+        try:
+            self.recentDataLoc = self.settings.get('recentData','Locations').split(',')
+            for location in self.recentDataLoc:
+                if not os.access(location,os.R_OK):
+                    self.recentDataLoc.remove(location)
 
-#        except ConfigParser.NoSectionError:
-#            self.recentDataLoc = []
-#            self.settings.add_section('recentData')
-#            self.settings.set('recentData','Locations','')
-#            self.updateSettings()
+            for location in self.recentDataLoc:
+                location += '/' if location[-1] != '/' else ''
+                gene = location.split('/')[-2]
+                vars()[gene] = QAction(str(gene),self)
+                vars()[gene].triggered.connect(lambda a:self.viewData(location))
+                self.recentDataMenu.addAction(vars()[gene])
+
+        except ConfigParser.NoSectionError:
+            self.recentDataLoc = []
+            self.settings.add_section('recentData')
+            self.settings.set('recentData','Locations','')
+            self.updateSettings()
 
     def analyse(self):
         geneFound = False
@@ -174,29 +174,31 @@ class Application(QMainWindow):
         folder = QFileDialog.getExistingDirectory(self, "Select folder")
         if len(folder):
             self.viewData(folder)
-#            self.addRecentLoc(folder)
+            self.addRecentLoc(folder)
 
     def viewData(self, destination):
         self.dataWindow = DataRep.DataRep(destination)
 
         self.dataWindow.show()
 
-#    def addRecentLoc(self,folder):
-#        folder += '/' if folder[-1] != '/' else ''
-#        gene = folder.split('/')[-2]
-#        if len(self.recentDataLoc) == 10:
-#            self.recentDataLoc.pop(0)
-#            self.recentDataLoc.append([folder])
-#        string = ''
-#        for location in self.recentDataLoc:
-#            string += ',' if string != '' else ''
-#            string += location
-#        self.settings.set('recentData','Locations',string)
-#        self.updateSettings()
-#
-#        vars()[gene] = QAction(str(gene),self)
-#        vars()[gene].triggered.connect(self.viewData) #Haven't fixed the bug yet, but could be because the connect has a variable call, usually you connect without the brackets.
-#        self.recentDataMenu.addAction(vars()[gene])
+    def addRecentLoc(self,folder):
+        folder += '/' if folder[-1] != '/' else ''
+        gene = folder.split('/')[-2]
+        while len(self.recentDataLoc) > 10:
+            self.recentDataLoc.pop(0)
+        if len(self.recentDataLoc) > 9 and not folder in self.recentDataLoc:
+            self.recentDataLoc.pop(0)
+        self.recentDataLoc += [folder]
+        string = ''
+        for location in self.recentDataLoc:
+            string += ',' if string != '' else ''
+            string += location
+        self.settings.set('recentData','Locations',string)
+        self.updateSettings()
+
+        vars()[gene] = QAction(str(gene),self)
+        vars()[gene].triggered.connect(lambda a:self.viewData(folder))
+        self.recentDataMenu.addAction(vars()[gene])
 
     def updateOutput(self, x):
         if not len(self.outputFolderInput.text()):
