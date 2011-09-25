@@ -22,7 +22,7 @@ class Application(QMainWindow):
         fileMenu.addAction(exitAction)
         helpMenu = menubar.addMenu("Help")
         helpAction = QAction("Help Documentation",self)
-#        helpAction.triggered.connect()
+        helpAction.triggered.connect(self.help)
         helpMenu.addAction(helpAction)
 
         #TODO: Create Help Documentation, cascade is created.
@@ -164,7 +164,7 @@ class Application(QMainWindow):
             self.statuses.setText("")
 
     def viewDataButton(self):
-        self.viewData(self.geneList[self.queueTabs.currentIndex()].destination)
+        self.viewData(self.geneList[self.queueTabs.currentIndex()].destination) 
 
     def viewDataOpen(self):
         folder = QFileDialog.getExistingDirectory(self, "Select folder")
@@ -222,6 +222,9 @@ class Application(QMainWindow):
         if type(event) == QKeyEvent:
             if event.key() == 16777220:
                 self.addToQueue()
+    def help(self):
+        self.helpWindow = HelpDocumentation()
+        self.helpWindow.show()
 
 class AnalyserThread(QThread):
     def __init__(self, geneName, miRNA, TF, destination, window):
@@ -249,7 +252,46 @@ class AnalyserThread(QThread):
         GeneAnalysis.Program(self.geneName, self.miRNA, self.TF, self.destination, self)
 
         self.progress = 2
-        
+
+
+class HelpDocumentation(QWidget):
+    def __init__(self):
+        QWidget.__init__(self)
+        grid = QGridLayout(self)
+        self.setWindowTitle("Help")
+        QWidget.setMinimumSize(self,600,400)
+
+        TitleFont = QFont("Times",20)
+        SubHeadingFont = QFont('Times',14)
+        TextFont = QFont('Times',10)
+
+        Title = QLabel('Gene Analysis Documentation:')
+        Title.setFont(TitleFont)
+        grid.addWidget(Title,0,0)
+
+        Subtitle1 = QLabel('Purpose:')
+        Subtitle1.setFont(SubHeadingFont)
+        grid.addWidget(Subtitle1,1,0)
+        #This text1 isjust an example, and is not by any means what I intend to put in.
+        Text1 = QLabel('The purpose of this program is to provide data that represents the most common TF sites and mirna binding sites to the user.\n Based on these, users may be able to determine other genes with simmilar functions.')
+        Text1.setFont(TextFont)
+        grid.addWidget(Text1,2,0)
+
+        Subtitle2 = QLabel('Setting Up:')
+        Subtitle2.setFont(SubHeadingFont)
+        grid.addWidget(Subtitle2,3,0)
+        #This text2 is also just an example.
+        Text2 = QLabel('In this application, the files "Mirna.txt" and "TF.txt" will automatically be looked for from the location of the Main.exe file.\n If you don\'t have these files under "Resources/..." then you will have to select the locations using the file option.\n Once you have selected these options, you can select a gene to process, such as TNFAIP3, IRAK1, RNF11 or PTEN.\nThe program will then create a set of files with data under the location of the executible, unless a destination is specified otherwise.')
+        Text2.setFont(TextFont)
+        grid.addWidget(Text2,4,0)
+
+
+        Exit = QPushButton("Close")
+        grid.addWidget(Exit,5,0)
+        self.connect(Exit,SIGNAL('clicked()'),self.Cancel)
+
+    def Cancel(self):
+        self.close()
 
 app = QApplication(sys.argv)
 
