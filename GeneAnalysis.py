@@ -59,7 +59,10 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
      and dealing with the Database Data to return results to the user."""
 
     #Needs to check if selected/current directory already exist. Ie - Override?
-    if destinationFolder[-1] == '/':
+    if destinationFolder == '':
+        window.feedback("No output directory specified.")
+        return
+    elif destinationFolder[-1] == '/':
         #Removes extra forward slash if exists
         destinationFolder = destinationFolder[0:len(destinationFolder)-1]
     if os.access(destinationFolder+'/',os.F_OK) and len(geneX):
@@ -69,7 +72,11 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
 
     window.feedback('Finding MiRNA\'s and their targeted genes, associated with ' + str(geneX) + '.')
     Mirnas,mirnaDic = getMiRNA(geneX,mirnaLoc)
-    if not len(Mirnas):
+    if Mirnas == False:
+        window.feedback("MiRNA file not found.")
+        window.error("File could not be found", "MiRNA file was not found at the specified location.")
+        return
+    elif not len(Mirnas):
         return MirnaError('MirnaError: There are no Mirna\'s found for ' + str(geneX)) #If there are no results, no point in proceeding.
     else:
         #To provide feedback to the user - Incorperated with Interface
@@ -77,7 +84,10 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
 
     window.feedback('Finding TF\'s and their targeted genes, associated with ' + str(geneX) + '.')
     Tfs,tfDic = getTF(geneX,tfLoc)
-    if not len(Tfs):
+    if Tfs == False:
+        window.feedback("TF file not found.")
+        return
+    elif not len(Tfs):
         return TfError('TfError: There are no TF\'s found for ' + str(geneX)+'.')
     else:
         #To provide feedback to the user - Now Incorperated with UserInterface
