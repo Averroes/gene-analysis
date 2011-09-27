@@ -7,7 +7,10 @@ def getMiRNA(geneX,mirnaLoc):
     used for returning a dictionary of MiRNA and the genes they affect,
     as well as the MiRNAs that target the subject gene."""
 
-    miRNA_Database = open(mirnaLoc,'r')
+    try:
+        miRNA_Database = open(mirnaLoc,'r')
+    except IOError:
+        return False, False
     miRNAs = [] #List for MiRNAs targeting gene X
     mirnaDic = {} #Dictionary for all MiRNA and their targeted Genes.
     for line in miRNA_Database:
@@ -26,7 +29,10 @@ def getTF(geneX,tfLoc):
     used for returning a dictionary of TFs and their targeted genes,
     as well as the TFs that target the subject gene."""
 
-    TF_Database = open(tfLoc,'r')
+    try:
+        TF_Database = open(tfLoc,'r')
+    except IOError:
+        return False, False
     tfs = [] #List for TFs targeting gene X
     tfDic = {} #Dictionary for all MiRNA and their targeted Genes.
     for line in TF_Database:
