@@ -20,6 +20,7 @@ class Application(QMainWindow):
         self.recentDataMenu = QMenu("Recent Data",self)
         fileMenu.addMenu(self.recentDataMenu)
         fileMenu.addAction(exitAction)
+
         helpMenu = menubar.addMenu("Help")
         helpAction = QAction("Help Documentation",self)
         helpAction.triggered.connect(self.help)
@@ -170,12 +171,16 @@ class Application(QMainWindow):
         folder = QFileDialog.getExistingDirectory(self, "Select folder")
         if len(folder):
             self.viewData(folder)
-            self.addRecentLoc(folder)
+            if not folder in self.recentDataLoc:
+                self.addRecentLoc(folder)
 
     def viewData(self, destination):
-        self.dataWindow = DataRep.DataRep(destination)
-
-        self.dataWindow.show()
+        if os.access(destination,os.R_OK):
+            self.dataWindow = DataRep.DataRep(destination)
+            self.dataWindow.show()
+        else:
+            #TODO: Do we want some sort of "Error" window here? This is for when someone's changed a pre-existing directory location whilein program...
+            return False
 
     def addRecentLoc(self,folder):
         folder += '/' if folder[-1] != '/' else ''
