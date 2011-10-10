@@ -76,7 +76,8 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
         window.feedback("MiRNA file not found.")
         return
     elif not len(Mirnas):
-        return MirnaError('MirnaError: There are no Mirna\'s found for ' + str(geneX)) #If there are no results, no point in proceeding.
+        window.feedback('MirnaError: There are no Mirna\'s found for ' + str(geneX)) #If there are no results, no point in proceeding.
+        return
     else:
         #To provide feedback to the user - Incorperated with Interface
         window.feedback("There are "+str(len(Mirnas))+' miRNA\'s targeting '+str(geneX))
@@ -87,7 +88,8 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
         window.feedback("TF file not found.")
         return
     elif not len(Tfs):
-        return TfError('TfError: There are no TF\'s found for ' + str(geneX)+'.')
+        window.feedback('TfError: There are no TF\'s found for ' + str(geneX)+'.')
+        return
     else:
         #To provide feedback to the user - Now Incorperated with UserInterface
         window.feedback("There are "+str(len(Tfs))+' TF\'s targeting '+str(geneX)+'.')
@@ -103,7 +105,8 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
             tfSet = set(tfDic[tf])
             intersection = sorted(list(mirnaSet.intersection(tfSet)))
             if not intersection:
-                return MirnaError('Not Intersections' + str(intersection))
+                window.feedback('Not Intersections' + str(intersection))
+                return
             intersections.update({combinationName:intersection}) #Creates form Key = (Mirna,TF) and Value = [Gene,Gene2,....]
             #Generates enrichment score
             enrichment = float(len(intersections[combinationName]))/float(len(set(mirnaDic[combinationName[0]])))*100
@@ -119,17 +122,3 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
 
     window.feedback('Operations Completed Successfully.\nData saved to: '+str(destinationFolder))
     return
-
-class TfError(Exception):
-    """Used to return Errors when no TF's are found for GeneX."""
-    def __init__(self,value):
-        self.value=value
-    def __str__(self):
-        return repr(self.value)
-
-class MirnaError(Exception):
-    """Used to return Errors when no Mirna's are found for GeneX."""
-    def __init__(self,value):
-        self.value=value
-    def __str__(self):
-        return repr(self.value)

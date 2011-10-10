@@ -1,4 +1,5 @@
 __author__ = 'cwhi19 and mgeb1'
+__version__ = '0.0.1'
 
 import sys, ConfigParser, GeneAnalysis, DataRep, os
 from PyQt4.Qt import *
@@ -25,6 +26,10 @@ class Application(QMainWindow):
         helpAction = QAction("Help Documentation",self)
         helpAction.triggered.connect(self.help)
         helpMenu.addAction(helpAction)
+
+        aboutAction = QAction("About", self)
+        aboutAction.triggered.connect(self.about)
+        helpMenu.addAction(aboutAction)
 
         #TODO: Create Help Documentation, cascade is created.
         #TODO: Add a Load Setting option?
@@ -231,6 +236,10 @@ class Application(QMainWindow):
         self.helpWindow = HelpDocumentation()
         self.helpWindow.show()
 
+    def about(self):
+        self.aboutWindow = About()
+        self.aboutWindow.show()
+
 class AnalyserThread(QThread):
     def __init__(self, geneName, miRNA, TF, destination, window):
         QThread.__init__(self)
@@ -297,6 +306,20 @@ class HelpDocumentation(QWidget):
 
     def Cancel(self):
         self.close()
+
+class About(QWidget):
+    def __init__(self):
+        QWidget.__init__(self)
+        grid = QGridLayout(self)
+        self.setWindowTitle("About")
+
+        programTitle = QLabel("Gene Analyser")
+        programTitle.setFont(QFont("Arial", 12))
+        grid.addWidget(programTitle, 0, 0)
+        grid.addWidget(QLabel("Matt Gebert and Chris Whittle"), 1, 0)
+        grid.addWidget(QLabel("working with Doctor Gantier"), 2, 0)
+        grid.addWidget(QLabel(__version__), 3, 0)
+
 
 app = QApplication(sys.argv)
 
