@@ -74,7 +74,6 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
     Mirnas,mirnaDic = getMiRNA(geneX,mirnaLoc)
     if Mirnas == False:
         window.feedback("MiRNA file not found.")
-        window.error("File could not be found", "MiRNA file was not found at the specified location.")
         return
     elif not len(Mirnas):
         return MirnaError('MirnaError: There are no Mirna\'s found for ' + str(geneX)) #If there are no results, no point in proceeding.
