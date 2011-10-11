@@ -1,5 +1,5 @@
 __author__ = 'cwhi19 and mgeb1'
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 
 import sys, ConfigParser, GeneAnalysis, DataRep, os
 from PyQt4.Qt import *

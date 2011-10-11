@@ -59,6 +59,8 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
      and dealing with the Database Data to return results to the user."""
 
     #Needs to check if selected/current directory already exist. Ie - Override?
+    geneX = geneX.lower()
+
     if destinationFolder == '':
         window.feedback("No output directory specified.")
         return
@@ -73,10 +75,10 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
     window.feedback('Finding MiRNA\'s and their targeted genes, associated with ' + str(geneX) + '.')
     Mirnas,mirnaDic = getMiRNA(geneX,mirnaLoc)
     if Mirnas == False:
-        window.feedback("MiRNA file not found.")
+        window.feedback("MiRNA file not found. Program Terminated.")
         return False
     elif not len(Mirnas):
-        window.feedback('MirnaError: There are no Mirna\'s found for ' + str(geneX)) #If there are no results, no point in proceeding.
+        window.feedback('MirnaError: There are no Mirna\'s found for ' + str(geneX) + ', Program Terminated.') #If there are no results, no point in proceeding.
         return False
     else:
         #To provide feedback to the user - Incorperated with Interface
@@ -85,10 +87,10 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
     window.feedback('Finding TF\'s and their targeted genes, associated with ' + str(geneX) + '.')
     Tfs,tfDic = getTF(geneX,tfLoc)
     if Tfs == False:
-        window.feedback("TF file not found.")
+        window.feedback("TF file not found. Program Terminated.")
         return False
     elif not len(Tfs):
-        window.feedback('TfError: There are no TF\'s found for ' + str(geneX)+'.')
+        window.feedback('TfError: There are no TF\'s found for ' + str(geneX) + ', Program Terminated.')
         return False
     else:
         #To provide feedback to the user - Now Incorperated with UserInterface
@@ -105,7 +107,7 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
             tfSet = set(tfDic[tf])
             intersection = sorted(list(mirnaSet.intersection(tfSet)))
             if not intersection:
-                window.feedback('Not Intersections' + str(intersection))
+                window.feedback('Not Intersections' + str(intersection) + ', Program Terminated.')
                 return False
             intersections.update({combinationName:intersection}) #Creates form Key = (Mirna,TF) and Value = [Gene,Gene2,....]
             #Generates enrichment score
