@@ -1,5 +1,5 @@
 __author__ = 'cwhi19 and mgeb1'
-__version__ = '0.1.5'
+__version__ = '0.1.6'
 
 import sys, ConfigParser, GeneAnalysis, DataRep, os
 from PyQt4.Qt import *
@@ -146,7 +146,7 @@ class Application(QMainWindow):
 
     def finishedAnalysis(self, gene):
         if gene.progress == 2:
-            self.addRecentLoc(gene.geneName)
+            self.addRecentLoc(gene.destination)
         self.analyse()
 
     def addToQueue(self):
