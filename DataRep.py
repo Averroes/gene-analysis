@@ -9,7 +9,7 @@ class DataRep(QWidget):
         geneName = geneFolder.replace('\\','/')
         geneName = geneName.split('/')[-2]
         QWidget.__init__(self)
-        self.setWindowTitle("Gene Data")
+        self.setWindowTitle("Gene Data - " + geneName)
         QWidget.setMinimumSize(self,800,400)
         self.grid = QGridLayout(self)
 
@@ -49,9 +49,6 @@ class DataRep(QWidget):
         self.filterData()
         self.setColumnSizes()
 
-    def windowResized(self):
-        print 1
-
     def setColumnSizes(self):
         size =  (int(str(QWidget.size(self)).split("(")[1].split(',')[0])-80)/self.dataTable.columnCount()
         for head in range(0,self.dataTable.columnCount()):
@@ -83,5 +80,5 @@ class DataRep(QWidget):
                 column +=1
             row+=1
 
-    def resizeEvent(self, *args, **kargs):
+    def resizeEvent(self, *args, **kwargs):
         self.setColumnSizes()

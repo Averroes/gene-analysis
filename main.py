@@ -33,7 +33,6 @@ class Application(QMainWindow):
 
         #TODO: Create Help Documentation, cascade is created.
         #TODO: Add a Load Setting option?
-        
 
         self.geneList = []
 
@@ -136,12 +135,17 @@ class Application(QMainWindow):
         for gene in self.geneList:
             if not gene.progress and not geneFound:
                 geneFound = True
-                gene.finished.connect(self.analyse)
+                gene.finished.connect(lambda: self.finishedAnalysis(gene))
                 gene.start()
 
                 self.analyseButton.setDisabled(True)
 
                 self.connect(gene, SIGNAL("updateStatuses()"), self.updateStatuses)
+
+    def finishedAnalysis(self, gene):
+        if gene.progress == 2:
+            self.addRecentLoc(gene.geneName)
+        self.analyse()
 
     def addToQueue(self):
         self.settings.set('locations', 'miRNA', self.miRNAFileInput.text())
@@ -187,8 +191,13 @@ class Application(QMainWindow):
             self.dataWindow = DataRep.DataRep(destination)
             self.dataWindow.show()
         else:
-            #TODO: Do we want some sort of "Error" window here? This is for when someone's changed a pre-existing directory location whilein program...
-            return False
+            errorBox = QMessageBox()
+            errorBox.setText("File not found")
+            errorBox.setInformativeText("The gene data could not be found at " + destination + ".")
+            errorBox.setIcon(QMessageBox.Warning)
+            errorBox.setStandardButtons(QMessageBox.Ok)
+            errorBox.exec_()
+
 
     def addRecentLoc(self,folder):
         folder += '/' if folder[-1] != '/' else ''
