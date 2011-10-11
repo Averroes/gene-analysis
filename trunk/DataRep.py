@@ -49,6 +49,29 @@ class DataRep(QWidget):
         self.filterData()
         self.setColumnSizes()
 
+        self.copyAction = QAction("Copy",self)
+        self.copyAction.setShortcut("Ctrl+C")
+        self.addAction(self.copyAction)
+        self.connect(self.copyAction,SIGNAL("triggered()"),self.copyCells)
+
+    def copyCells(self):
+        clpStr = ''
+        selection = self.dataTable.selectedRanges()[0]
+        Bottom = selection.bottomRow()
+        Left = selection.leftColumn()
+        Right = selection.rightColumn()
+        Top = selection.topRow()
+        for row in range(Top,Bottom+1):
+            for column in range(Left,Right+1):
+                cell = self.dataTable.item(row,column).text()
+                clpStr+=cell
+                if not column == Right:
+                    clpStr+='\t'
+            clpStr+='\n'
+        clipboard = QApplication.clipboard()
+        clipboard.setText(clpStr)
+        return
+
     def setColumnSizes(self):
         size =  (int(str(QWidget.size(self)).split("(")[1].split(',')[0])-80)/self.dataTable.columnCount()
         for head in range(0,self.dataTable.columnCount()):
