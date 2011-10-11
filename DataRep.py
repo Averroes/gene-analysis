@@ -49,6 +49,8 @@ class DataRep(QWidget):
         self.filterData()
         self.setColumnSizes()
 
+    def windowResized(self):
+        print 1
 
     def setColumnSizes(self):
         size =  (int(str(QWidget.size(self)).split("(")[1].split(',')[0])-80)/self.dataTable.columnCount()
@@ -80,3 +82,6 @@ class DataRep(QWidget):
                 self.dataTable.setItem(row,column,Item)
                 column +=1
             row+=1
+
+    def resizeEvent(self, *args, **kargs):
+        self.setColumnSizes()
