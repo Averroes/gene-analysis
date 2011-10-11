@@ -132,11 +132,14 @@ class Application(QMainWindow):
     def analyse(self):
         geneFound = False
         self.outputSet = False
+        self.analyseButton.setDisabled(False)
         for gene in self.geneList:
             if not gene.progress and not geneFound:
                 geneFound = True
                 gene.finished.connect(self.analyse)
                 gene.start()
+
+                self.analyseButton.setDisabled(True)
 
                 self.connect(gene, SIGNAL("updateStatuses()"), self.updateStatuses)
 
@@ -263,9 +266,8 @@ class AnalyserThread(QThread):
     def run(self):
         self.progress = 1
 
-        GeneAnalysis.Program(self.geneName, self.miRNA, self.TF, self.destination, self)
-
-        self.progress = 2
+        if GeneAnalysis.Program(self.geneName, self.miRNA, self.TF, self.destination, self):
+            self.progress = -1
 
 
 class HelpDocumentation(QWidget):
