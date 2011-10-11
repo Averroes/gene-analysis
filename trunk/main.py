@@ -14,6 +14,8 @@ class Application(QMainWindow):
         self.setCentralWidget(self.mainWidget)
         self.grid = QGridLayout(self.mainWidget)
 
+        self.dataWindowCount = 0 #Allows data windows to be opened, to be able to compare data.
+
         menubar = self.menuBar()
         fileMenu = menubar.addMenu("File")
         exitAction = QAction("Open data...", self) #Simplified from "previously generate", just for elagency. Should be self explainatory enough.
@@ -188,8 +190,11 @@ class Application(QMainWindow):
 
     def viewData(self, destination):
         if os.access(destination,os.R_OK):
-            self.dataWindow = DataRep.DataRep(destination)
-            self.dataWindow.show()
+            varName = 'dataWindow'
+            name = varName + str(self.dataWindowCount)
+            vars(self)[name] = DataRep.DataRep(destination)
+            vars(self)[name].show()
+            self.dataWindowCount+=1
         else:
             errorBox = QMessageBox()
             errorBox.setText("File not found")
@@ -337,8 +342,8 @@ class About(QWidget):
         programTitle.setFont(QFont("Arial", 12))
         grid.addWidget(programTitle, 0, 0)
         grid.addWidget(QLabel("Matt Gebert and Chris Whittle"), 1, 0)
-        grid.addWidget(QLabel("working with Doctor Gantier"), 2, 0)
-        grid.addWidget(QLabel(__version__), 3, 0)
+        grid.addWidget(QLabel("Working with Doctor Gantier"), 2, 0)
+        grid.addWidget(QLabel('Version: '+__version__), 3, 0)
 
 
 app = QApplication(sys.argv)
