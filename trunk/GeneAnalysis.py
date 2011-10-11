@@ -74,10 +74,10 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
     Mirnas,mirnaDic = getMiRNA(geneX,mirnaLoc)
     if Mirnas == False:
         window.feedback("MiRNA file not found.")
-        return
+        return False
     elif not len(Mirnas):
         window.feedback('MirnaError: There are no Mirna\'s found for ' + str(geneX)) #If there are no results, no point in proceeding.
-        return
+        return False
     else:
         #To provide feedback to the user - Incorperated with Interface
         window.feedback("There are "+str(len(Mirnas))+' miRNA\'s targeting '+str(geneX))
@@ -86,10 +86,10 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
     Tfs,tfDic = getTF(geneX,tfLoc)
     if Tfs == False:
         window.feedback("TF file not found.")
-        return
+        return False
     elif not len(Tfs):
         window.feedback('TfError: There are no TF\'s found for ' + str(geneX)+'.')
-        return
+        return False
     else:
         #To provide feedback to the user - Now Incorperated with UserInterface
         window.feedback("There are "+str(len(Tfs))+' TF\'s targeting '+str(geneX)+'.')
@@ -106,7 +106,7 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
             intersection = sorted(list(mirnaSet.intersection(tfSet)))
             if not intersection:
                 window.feedback('Not Intersections' + str(intersection))
-                return
+                return False
             intersections.update({combinationName:intersection}) #Creates form Key = (Mirna,TF) and Value = [Gene,Gene2,....]
             #Generates enrichment score
             enrichment = float(len(intersections[combinationName]))/float(len(set(mirnaDic[combinationName[0]])))*100
@@ -121,4 +121,4 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
     writeData(geneX,intersections,enrichments,top25percent,destinationFolder)
 
     window.feedback('Operations Completed Successfully.\nData saved to: '+str(destinationFolder))
-    return
+    return True

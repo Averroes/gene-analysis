@@ -303,9 +303,16 @@ class HelpDocumentation(QWidget):
         Text2.setFont(TextFont)
         grid.addWidget(Text2,4,0)
 
+        Subtitle3 = QLabel('What is the "Enrichment Score"?')
+        Subtitle3.setFont(SubHeadingFont)
+        grid.addWidget(Subtitle3,5,0)
+        #Not sure if the science is correct. :P
+        Text3 = QLabel('The Enrichment Score produced is a factor of relevance, being the amount of genes that a miRNA targets with a TF,\n divided by the total amound of genes for that miRNA. This gives an indication of how relevant the two factors are to each other.')
+        Text3.setFont(TextFont)
+        grid.addWidget(Text3,6,0)
 
         Exit = QPushButton("Close")
-        grid.addWidget(Exit,5,0)
+        grid.addWidget(Exit,7,0)
         self.connect(Exit,SIGNAL('clicked()'),self.Cancel)
 
     def Cancel(self):
