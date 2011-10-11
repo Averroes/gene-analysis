@@ -1,5 +1,5 @@
 __author__ = 'cwhi19 and mgeb1'
-__version__ = '0.0.1'
+__version__ = '0.1.1'
 
 import sys, ConfigParser, GeneAnalysis, DataRep, os
 from PyQt4.Qt import *
@@ -267,6 +267,8 @@ class AnalyserThread(QThread):
         self.progress = 1
 
         if GeneAnalysis.Program(self.geneName, self.miRNA, self.TF, self.destination, self):
+            self.progress = 2
+        else:
             self.progress = -1
 
 
