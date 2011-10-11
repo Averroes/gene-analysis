@@ -29,12 +29,12 @@ class Application(QMainWindow):
         helpAction.triggered.connect(self.help)
         helpMenu.addAction(helpAction)
 
-        aboutAction = QAction("About", self)
+        aboutAction = QAction("Program Information", self)
         aboutAction.triggered.connect(self.about)
         helpMenu.addAction(aboutAction)
 
         #TODO: Create Help Documentation, cascade is created.
-        #TODO: Add a Load Setting option?
+        #TODO: Add a Load Setting option?\
 
         self.geneList = []
 
@@ -350,5 +350,6 @@ app = QApplication(sys.argv)
 
 window = Application()
 window.show()
+window.raise_()
 
 app.exec_()
