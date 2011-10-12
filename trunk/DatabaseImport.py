@@ -18,7 +18,7 @@ def getMiRNA(geneX,mirnaLoc):
         line = line.split('\t') #The document is in the form "Mirna [\t] Gene"
         if len(line) > 1:
             mirna  = line[0] #The MiRNA.
-            gene = line[1] #The target gene.
+            gene = line[1].rstrip() #The target gene.
             if gene == str(geneX) and not mirna in miRNAs:
                 miRNAs.append(mirna)
             mirnaDic.update({mirna:mirnaDic[mirna]+[gene]}) if mirna in mirnaDic else mirnaDic.update({mirna:[gene]}) #Keeps duplicates in list, adds to previous lists.
@@ -40,7 +40,7 @@ def getTF(geneX,tfLoc):
         line = line.split('\t') #Doc in same form as miRNA_Database.
         if len(line)>1:
             TF = line[0]
-            gene = line[1]
+            gene = line[1].rstrip()
             if gene == geneX and not TF in tfs:
                 tfs.append(TF)
             tfDic.update({TF:tfDic[TF] + [gene]}) if TF in tfDic else tfDic.update({TF:[gene]})
