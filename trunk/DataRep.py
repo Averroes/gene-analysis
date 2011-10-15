@@ -14,6 +14,8 @@ class DataRep(QWidget):
         self.grid = QGridLayout(self)
 
         self.processedData = []
+        self.writeableData = []
+        self.filterStr = ''
 
         dataFile = open(geneFolder + geneName +  " - Spreadsheet.csv")
         headers = dataFile.readline().replace("\n", "").split(",")
@@ -78,12 +80,19 @@ class DataRep(QWidget):
             self.dataTable.setColumnWidth(head,size)
 
     def filterData(self):
-        self.writeableData = []
         currentText = str(self.filterInput.displayText())
-        for data in self.processedData:
-            if currentText in str(data):
-                self.writeableData.append(data)
+        newData = []
+        if self.filterStr in currentText:
+            for data in self.processedData:
+                if currentText in str(data):
+                    newData.append(data)
+        else:
+            for data in self.processedData:
+                if currentText in str(data):
+                    newData.append(data)
+        self.writeableData = newData
         self.sortBy()
+        self.filterStr = currentText
 
     def sortBy(self):
         index = self.orderOptions.currentIndex()
