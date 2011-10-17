@@ -1,5 +1,5 @@
 __author__ = 'cwhi19 and mgeb1'
-__version__ = '0.1.6'
+__version__ = '0.2.0'
 
 import sys, ConfigParser, GeneAnalysis, DataRep, os
 from PyQt4.Qt import *
@@ -15,6 +15,7 @@ class Application(QMainWindow):
         self.grid = QGridLayout(self.mainWidget)
 
         self.dataWindowCount = 0 #Allows data windows to be opened, to be able to compare data.
+        self.geneSeparationCharacters = [ "\r\n", "\n", "\r", " ", "\t", "," ]
 
         menubar = self.menuBar()
         fileMenu = menubar.addMenu("File")
@@ -155,8 +156,16 @@ class Application(QMainWindow):
         self.settings.set('locations', 'TF', self.TFFileInput.text())
         self.updateSettings()
 
-        self.geneList += [AnalyserThread(self.geneNameInput.text(), self.miRNAFileInput.text(), self.TFFileInput.text(), self.outputFolderInput.text(), self)]
-        self.queueTabs.insertTab(-1, self.geneNameInput.text())
+        genesToAdd = self.geneNameInput.text()
+        
+        for splitCharacter in self.geneSeparationCharacters:
+            genesToAdd = genesToAdd.replace(splitCharacter, ",")
+
+        genes = genesToAdd.split(',')
+
+        for gene in genes:
+            self.geneList += [AnalyserThread(gene, self.miRNAFileInput.text(), self.TFFileInput.text(), str(self.outputFolderInput.text()).replace("[gene]", gene), self)]
+            self.queueTabs.insertTab(-1, gene)
 
         self.geneNameInput.clear()
         self.outputFolderInput.clear()
@@ -230,7 +239,11 @@ class Application(QMainWindow):
         if not len(self.outputFolderInput.text()):
             self.outputSet = False
         if not self.outputSet:
-            self.outputFolderInput.setText("Output/" + x + "/")
+            multipleGenes = False
+            for separationCharacter in self.geneSeparationCharacters:
+                if separationCharacter in x:
+                    multipleGenes = True
+            self.outputFolderInput.setText("Output/" + ("[gene]" if multipleGenes else x) + "/")
 
     def chooseFile(self, textbox):
         file = QFileDialog.getOpenFileName(self, "Select file")
