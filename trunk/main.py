@@ -113,6 +113,7 @@ class Application(QMainWindow):
 
         try:
             self.recentDataLoc = self.settings.get('recentData','Locations').split(',')
+
             for location in self.recentDataLoc:
                 if not os.access(location,os.R_OK):
                     self.recentDataLoc.remove(location)
@@ -121,7 +122,7 @@ class Application(QMainWindow):
                 location += '/' if location[-1] != '/' else ''
                 gene = location.split('/')[-2]
                 vars()[gene] = QAction(str(gene),self)
-                vars()[gene].triggered.connect(lambda a:self.viewData(location))
+                vars()[gene].triggered.connect(lambda a, y=location: self.viewData(y))
                 self.recentDataMenu.addAction(vars()[gene])
 
         except ConfigParser.NoSectionError:
@@ -189,6 +190,7 @@ class Application(QMainWindow):
                 self.addRecentLoc(folder)
 
     def viewData(self, destination):
+        print destination
         if os.access(destination,os.R_OK):
             varName = 'dataWindow'
             name = varName + str(self.dataWindowCount)
