@@ -123,4 +123,4 @@ def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
     writeData(geneX,intersections,enrichments,top25percent,destinationFolder)
 
     window.feedback('Operations Completed Successfully.\nData saved to: '+str(destinationFolder))
-    return True
+    return True #If true, Main.py creates a "View Data" button for the user to access.
