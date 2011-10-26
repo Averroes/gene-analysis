@@ -1,4 +1,6 @@
+#summary An introduction to the purpose of the program.
 #labels Purpose
+
 = Introduction =
 
 This Program is an initiative of Dr. Michael Gantier, for his research with genetics.
