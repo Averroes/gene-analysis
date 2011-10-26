@@ -1,0 +1,12 @@
+#summary Generating Data for Multiple Genes
+#labels Phase-Support
+
+= Generating Data for Multiple Genes =
+
+== Filling out the form ==
+
+  # Multiple genes can be added to the queue easily by simply typing them all into the textbox labelled *Gene Name*.
+    * Each gene should be separated by either a space, comma, tab or newline character
+  # The output location can be changed, as long as _[gene]_ is included. For each gene added to the queue, _[gene]_ will be replaced with the relevant gene name.
+  # The *Add to queue* button can be pressed, adding all genes to the queue assuming they are properly separated.
+  # Now in the gene, the analysis of the genes can be carried out as detailed [http://code.google.com/p/gene-analysis/wiki/GeneratingData here].
