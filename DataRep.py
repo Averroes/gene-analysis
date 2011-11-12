@@ -180,7 +180,7 @@ class DataRep(QWidget):
         """Catches the resizeEvent call of QWidget, allowing us to respecify the column sizes."""
         self.setColumnSizes()
 
-    def cellDoubleClickedEvent(self, *args, **kwargs):
+    def cellDoubleClickedEvent(self, *args):
         """Should Catch Event Of QTableWidget to edit"""
         #TODO: Make this function occur after the Signal of a double click of a cell creates an edit instance.
         item = self.dataTable.item(args[0],args[1])
@@ -193,8 +193,9 @@ class DataRep(QWidget):
 class ViewGenes(QWidget):
     def __init__(self,genes,geneSet):
         QWidget.__init__(self)
-        self.setWindowTitle('Gene Intersections of miRNA "' + str(geneSet[0]) + '" and TF "' + str(geneSet[1])+'".')
-        self.setMaximumSize(QSize(400,500))
+        self.setWindowTitle('miRNA "' + str(geneSet[0]) + '" and TF "' + str(geneSet[1])+'" - Intersecting Genes.')
+        self.setMinimumSize(QSize(300,150))
+        self.resize(QSize(400,500))
         grid = QGridLayout(self)
         grid.addWidget(QLabel('Genes:'), 0, 0)
         self.filterInput = QLineEdit()
@@ -243,15 +244,8 @@ class ViewGenes(QWidget):
                 self.table.removeRow(0)
         for row in range(0,len(self.writeableData)-1):
             self.table.insertRow(0)
-        print self.table.rowCount()
         row = 0
-        print self.writeableData
         for gene in self.writeableData:
-            if not row:
-                print gene
             Item = QTableWidgetItem(str(gene))
             self.table.setItem(row,0,Item)
             row+=1
-        
-
-        
