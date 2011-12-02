@@ -1,7 +1,6 @@
 from DatabaseImport import *
 import os
 __author__ = 'cwhi19 and mgeb1'
-
 def writeData(geneX,intersections,enrichments,topMirnas,destination):
     """After sorting the data, writes from the Program into text and csv files."""
     folderList = destination.split('/')
@@ -54,73 +53,92 @@ def getTop25(tfs,miRNAs,enrichments, percentile = 25):
 
     return topmiRNAs
 
-def Program(geneX,mirnaLoc,tfLoc,destinationFolder,window):
-    """This Function runs all the other base functions for sorting
-     and dealing with the Database Data to return results to the user."""
-
-    #Needs to check if selected/current directory already exist. Ie - Override?
-    geneX = geneX.lower()
-
-    if destinationFolder == '':
-        window.feedback("No output directory specified.")
+class Analyzer():
+    def __init__(self,mirnaLoc,tfLoc,destinationFolder):
+        self.mirnaDic = getMiRNA(mirnaLoc)
+        self.tfDic = getTF(tfLoc)
+        self.destinationFolder = destinationFolder
+        self.mirnaLoc = mirnaLoc
+        self.tfLoc = tfLoc
         return
-    elif destinationFolder[-1] == '/':
-        #Removes extra forward slash if exists
-        destinationFolder = destinationFolder[0:len(destinationFolder)-1]
-    if os.access(destinationFolder+'/',os.F_OK) and len(geneX):
-        if not window.confirm('Override?',"Files for This directory already exists.\nDo you want to override these files?"):
-            window.feedback('Directory will not be Overridden.')
-            return False
 
-    window.feedback('Finding MiRNA\'s and their targeted genes, associated with ' + str(geneX) + '.')
-    Mirnas,mirnaDic = getMiRNA(geneX,mirnaLoc)
-    if Mirnas == False:
-        window.feedback("MiRNA file not found. Program Terminated.")
-        return False
-    elif not len(Mirnas):
-        window.feedback('MirnaError: There are no Mirna\'s found for ' + str(geneX) + ', Program Terminated.') #If there are no results, no point in proceeding.
-        return False
-    else:
-        #To provide feedback to the user - Incorperated with Interface
-        window.feedback("There are "+str(len(Mirnas))+' miRNA\'s targeting '+str(geneX))
+    def Program(self,geneX,window):
+        """This Function runs all the other base functions for sorting
+         and dealing with the Database Data to return results to the user."""
 
-    window.feedback('Finding TF\'s and their targeted genes, associated with ' + str(geneX) + '.')
-    Tfs,tfDic = getTF(geneX,tfLoc)
-    if Tfs == False:
-        window.feedback("TF file not found. Program Terminated.")
-        return False
-    elif not len(Tfs):
-        window.feedback('TfError: There are no TF\'s found for ' + str(geneX) + ', Program Terminated.')
-        return False
-    else:
-        #To provide feedback to the user - Now Incorperated with UserInterface
-        window.feedback("There are "+str(len(Tfs))+' TF\'s targeting '+str(geneX)+'.')
+        #Needs to check if selected/current directory already exist. Ie - Override?
+        geneX = geneX.lower()
 
-    window.feedback('Creating Intersections between Mirna\'s and Tf\'s and Generating Enrichment Scores for all intersections.')
-    intersections = {} #Dictionary for all combinations of TF and miRNA. Key = (Mirna,TF) and Value = [Genes...]
-    enrichments = {} #Dictionary for all combinations and their "Enrichment" score.
-    for mirna in Mirnas:
-        mirnaSet = set(mirnaDic[mirna])
-        for tf in Tfs:
-            combinationName = (mirna,tf)
-            #Generates intersection keys
-            tfSet = set(tfDic[tf])
-            intersection = sorted(list(mirnaSet.intersection(tfSet)))
-            if not intersection:
-                window.feedback('Not Intersections' + str(intersection) + ', Program Terminated.')
+        if self.destinationFolder == '':
+            window.feedback("No output directory specified.")
+            return
+
+        elif self.destinationFolder[-1] == '/':
+            #Removes extra forward slash if exists
+            self.destinationFolder = self.destinationFolder[0:len(self.destinationFolder)-1]
+        if os.access(self.destinationFolder+'/',os.F_OK) and len(geneX):
+            if not window.confirm('Override?',"Files for This directory already exists.\nDo you want to override these files?"):
+                window.feedback('Directory will not be Overridden.')
                 return False
-            intersections.update({combinationName:intersection}) #Creates form Key = (Mirna,TF) and Value = [Gene,Gene2,....]
-            #Generates enrichment score
-            enrichment = float(len(intersections[combinationName]))/float(len(set(mirnaDic[combinationName[0]])))*100
-            enrichments.update({combinationName:enrichment}) #Creates form Key = (Mirna,TF) and Value = Enrichment Integer
 
-    #Obtains the top 25% of each TF's mirna's based on enrichment score, returning them as a frequency dictionary.
-    window.feedback('Obtaining frequency list of most common MiRNA\'s for '+str(geneX))
-    top25percent = getTop25(Tfs,Mirnas,enrichments)
+        Mirnas = []
+        for Mirna in self.mirnaDic:
+            if geneX in self.mirnaDic[Mirna]:
+                Mirnas.append(Mirna)
 
-    #Writes the data to files.
-    window.feedback('Writing Data To Files.')
-    writeData(geneX,intersections,enrichments,top25percent,destinationFolder)
+        window.feedback('Finding MiRNA\'s and their targeted genes, associated with ' + str(geneX) + '.')
+        if Mirnas == False:
+            window.feedback("MiRNA file not found. Program Terminated.")
+            return False
+        elif not len(Mirnas):
+            window.feedback('MirnaError: There are no Mirna\'s found for ' + str(geneX) + ', Program Terminated.') #If there are no results, no point in proceeding.
+            return False
+        else:
+            #To provide feedback to the user - Incorperated with Interface
+            window.feedback("There are "+str(len(Mirnas))+' miRNA\'s targeting '+str(geneX))
 
-    window.feedback('Operations Completed Successfully.\nData saved to: '+str(destinationFolder))
-    return True #If true, Main.py creates a "View Data" button for the user to access.
+        window.feedback('Finding TF\'s and their targeted genes, associated with ' + str(geneX) + '.')
+        
+        Tfs = []
+        for Tf in self.tfDic:
+            if geneX in self.tfDic[Tf]:
+                Tfs.append(Tf)
+        
+        if Tfs == False:
+            window.feedback("TF file not found. Program Terminated.")
+            return False
+        elif not len(Tfs):
+            window.feedback('TfError: There are no TF\'s found for ' + str(geneX) + ', Program Terminated.')
+            return False
+        else:
+            #To provide feedback to the user - Now Incorperated with UserInterface
+            window.feedback("There are "+str(len(Tfs))+' TF\'s targeting '+str(geneX)+'.')
+
+        window.feedback('Creating Intersections between Mirna\'s and Tf\'s and Generating Enrichment Scores for all intersections.')
+        intersections = {} #Dictionary for all combinations of TF and miRNA. Key = (Mirna,TF) and Value = [Genes...]
+        enrichments = {} #Dictionary for all combinations and their "Enrichment" score.
+        for mirna in Mirnas:
+            mirnaSet = set(self.mirnaDic[mirna])
+            for tf in Tfs:
+                combinationName = (mirna,tf)
+                #Generates intersection keys
+                tfSet = set(self.tfDic[tf])
+                intersection = sorted(list(mirnaSet.intersection(tfSet)))
+                if not intersection:
+                    window.feedback('Not Intersections' + str(intersection) + ', Program Terminated.')
+                    return False
+                intersections.update({combinationName:intersection}) #Creates form Key = (Mirna,TF) and Value = [Gene,Gene2,....]
+                #Generates enrichment score
+                enrichment = float(len(intersections[combinationName]))/float(len(set(self.mirnaDic[combinationName[0]])))*100
+                enrichments.update({combinationName:enrichment}) #Creates form Key = (Mirna,TF) and Value = Enrichment Integer
+
+        #Obtains the top 25% of each TF's mirna's based on enrichment score, returning them as a frequency dictionary.
+        window.feedback('Obtaining frequency list of most common MiRNA\'s for '+str(geneX))
+        top25percent = getTop25(Tfs,Mirnas,enrichments)
+
+        #Writes the data to files.
+        window.feedback('Writing Data To Files.')
+        writeData(geneX,intersections,enrichments,top25percent,self.destinationFolder)
+
+        window.feedback('Operations Completed Successfully.\nData saved to: '+str(self.destinationFolder))
+        return True #If true, Main.py creates a "View Data" button for the user to access.
