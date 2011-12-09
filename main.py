@@ -19,6 +19,8 @@ class Application(QMainWindow):
 
         self.dataWindowCount = 0 # Allows data windows to be opened, to be able to compare data.
         self.geneSeparationCharacters = [ "\r\n", "\n", "\r", " ", "\t", "," ] # Characters that denote a split between gene names
+        self.dataImported = False
+        self.analyser = GeneAnalysis.Analyser()
 
         menubar = self.menuBar() # Initialise program menu bar
         fileMenu = menubar.addMenu("File") # Create file menu
@@ -39,53 +41,63 @@ class Application(QMainWindow):
 
         self.geneList = [] # Create empty gene queue
 
-        self.grid.addWidget(QLabel("Gene Name:"), 0, 0) # Row for gene input
-        self.geneNameInput = QLineEdit()
-        self.grid.addWidget(self.geneNameInput, 0, 1, 1, 2)
-
-        self.grid.addWidget(QLabel("Simplified miRNA File:"), 1, 0) # Row for miRNA textbox and file browser
+        self.grid.addWidget(QLabel("Simplified miRNA File:"), 0, 0) # Row for miRNA textbox and file browser
         self.miRNAFileInput = QLineEdit()
-        self.grid.addWidget(self.miRNAFileInput, 1, 1)
+        self.grid.addWidget(self.miRNAFileInput, 0, 1)
         self.miRNABrowse = QPushButton("Browse")
-        self.grid.addWidget(self.miRNABrowse, 1, 2)
+        self.grid.addWidget(self.miRNABrowse, 0, 2)
 
-        self.grid.addWidget(QLabel("Simplified TF File:"), 2, 0) # Row for TF textbox and file browser
+        self.grid.addWidget(QLabel("Simplified TF File:"), 1, 0) # Row for TF textbox and file browser
         self.TFFileInput = QLineEdit()
-        self.grid.addWidget(self.TFFileInput, 2, 1)
+        self.grid.addWidget(self.TFFileInput, 1, 1)
         self.TFBrowse = QPushButton("Browse")
-        self.grid.addWidget(self.TFBrowse, 2, 2)
+        self.grid.addWidget(self.TFBrowse, 1, 2)
 
-        self.grid.addWidget(QLabel("Output Directory:"), 3, 0) # Row for destination location of data
+        self.databaseProgress = QProgressBar()
+        self.databaseProgress.setRange(0, 0)
+        self.databaseProgress.setTextVisible(False)
+        self.grid.addWidget(self.databaseProgress, 2, 0, 1, 3)
+        self.databaseImportButton = QPushButton("Import Databases")
+        self.grid.addWidget(self.databaseImportButton, 2, 0, 1, 3)
+        self.databaseProgress.hide()
+
+        self.grid.addWidget(QLabel("Gene Name:"), 3, 0) # Row for gene input
+        self.geneNameInput = QLineEdit()
+        self.grid.addWidget(self.geneNameInput, 3, 1, 1, 2)
+
+        self.grid.addWidget(QLabel("Output Directory:"), 4, 0) # Row for destination location of data
         self.outputFolderInput = QLineEdit()
-        self.grid.addWidget(self.outputFolderInput, 3, 1)
+        self.grid.addWidget(self.outputFolderInput, 4, 1)
         self.outputBrowse = QPushButton("Browse")
-        self.grid.addWidget(self.outputBrowse, 3, 2)
+        self.grid.addWidget(self.outputBrowse, 4, 2)
         self.outputSet = False
 
         self.queueButton = QPushButton("Add to queue") # Button to add gene information to queue
         self.queueButton.setAutoDefault(True)
-        self.grid.addWidget(self.queueButton, 4, 0, 1, 3)
+        self.grid.addWidget(self.queueButton, 5, 0, 1, 3)
 
         self.analyseButton = QPushButton("Begin Analysis") # Button to begin analysis of genes in queue
-        self.grid.addWidget(self.analyseButton, 5, 0, 1, 3)
+        self.grid.addWidget(self.analyseButton, 6, 0, 1, 3)
+        self.analyseButton.setDisabled(True)
 
         self.queueTabs = QTabBar() # Tabbed interface showing gene queue
         self.queueTabs.setTabsClosable(True)
         self.queueTabs.setMovable(True)
-        self.grid.addWidget(self.queueTabs, 6, 0, 1, 3)
+        self.grid.addWidget(self.queueTabs, 7, 0, 1, 3)
 
         self.statuses = QLabel("") # Empty status label, is later updated with information relating to gene
-        self.grid.addWidget(self.statuses, 7, 0, 1, 3)
+        self.grid.addWidget(self.statuses, 8, 0, 1, 3)
         self.statuses.setAlignment(Qt.AlignTop)
 
         self.dataViewButton = QPushButton("View results") # Add button for viewing generated results, only visible if analysis succeeded
-        self.grid.addWidget(self.dataViewButton, 8, 0, 1, 3)
+        self.grid.addWidget(self.dataViewButton, 9, 0, 1, 3)
         self.dataViewButton.hide()
 
         # Connect events (eg. button pushes) to appropriate events
         self.connect(self.geneNameInput, SIGNAL('textChanged(QString)'), (lambda x: self.updateOutput(x)))
         self.connect(self.miRNABrowse, SIGNAL('clicked()'), lambda: self.chooseFile(self.miRNAFileInput))
         self.connect(self.TFBrowse, SIGNAL('clicked()'), lambda: self.chooseFile(self.TFFileInput))
+        self.connect(self.databaseImportButton, SIGNAL('clicked()'), self.importData)
         self.connect(self.outputBrowse, SIGNAL('clicked()'), lambda: self.chooseFolder(self.outputFolderInput))
         self.connect(self.queueButton, SIGNAL('clicked()'), self.addToQueue)
         self.connect(self.analyseButton, SIGNAL('clicked()'), self.analyse)
@@ -134,19 +146,22 @@ class Application(QMainWindow):
         """Begin analysis of next gene member of the queue."""
 
         # Find the next gene ready for analysis (ie. progress is set to 0)
-        geneFound = False
-        self.outputSet = False
-        self.analyseButton.setDisabled(False) # Make analysis button enabled (in case gene to analyse cannot be found)
-        for gene in self.geneList:
-            if not gene.progress and not geneFound: # If the progress is 0 and an earlier gene has not been found
-                geneFound = True
-                gene.finished.connect(lambda: self.finishedAnalysis(gene)) # Link the end of the thread object to this function
-                gene.start() # Begin the analysis thread
+        if self.dataImported:
+            geneFound = False
+            self.outputSet = False
+            self.analyseButton.setDisabled(False) # Make analysis button enabled (in case gene to analyse cannot be found)
+            for gene in self.geneList:
+                if not gene.progress and not geneFound: # If the progress is 0 and an earlier gene has not been found
+                    geneFound = True
+                    gene.finished.connect(lambda: self.finishedAnalysis(gene)) # Link the end of the thread object to this function
+                    gene.start() # Begin the analysis thread
 
-                self.analyseButton.setDisabled(True) # Prevent the user from trying to analyse data while process is running
+                    self.analyseButton.setDisabled(True) # Prevent the user from trying to analyse data while process is running
 
-                self.connect(gene, SIGNAL("updateStatuses()"), self.updateStatuses)
-                # Connect emission of status update signal from thread to the actual status update in the Application object
+                    self.connect(gene, SIGNAL("updateStatuses()"), self.updateStatuses)
+                    # Connect emission of status update signal from thread to the actual status update in the Application object
+        else:
+            print "Data not imported!" #TODO: add feedback
 
     def finishedAnalysis(self, gene):
         """Executes when analysis thread has terminated, takes an AnalyserThread object. Adds the
@@ -155,12 +170,30 @@ class Application(QMainWindow):
             self.addRecentLoc(gene.destination) # Add the gene path to recently generated data list
         self.analyse()
 
-    def addToQueue(self):
-        """Adds a new gene member (AnalyserThread object) to the queue based on data in textboxes.
-        Also updates the program preferences with new miRNA and TF data locations."""
+    def importData(self):
         self.settings.set('locations', 'miRNA', self.miRNAFileInput.text())
         self.settings.set('locations', 'TF', self.TFFileInput.text())
         self.updateSettings() # Update the settings file with new locations (if changed)
+
+        self.dataImported = False
+        self.analyseButton.setDisabled(True)
+
+        self.databaseImportButton.hide()
+        self.databaseProgress.show()
+
+        self.analyserThread = ImportThread(self.miRNAFileInput.text(), self.TFFileInput.text(), self.analyser)
+
+        self.analyserThread.finished.connect(self.imported)
+        self.analyserThread.start()
+
+    def imported(self):
+        self.dataImported = True
+        self.databaseImportButton.show()
+        self.databaseProgress.hide()
+        self.analyseButton.setDisabled(False)
+
+    def addToQueue(self):
+        """Adds a new gene member (AnalyserThread object) to the queue based on data in textboxes."""
 
         genesToAdd = self.geneNameInput.text() # Get the gene(s) from the user's input
         
@@ -170,7 +203,7 @@ class Application(QMainWindow):
         genes = genesToAdd.split(',') # Split the genes on commas
 
         for gene in genes: # Create a thread object for each gene and add to the end of the queue
-            self.geneList += [AnalyserThread(gene, self.miRNAFileInput.text(), self.TFFileInput.text(), str(self.outputFolderInput.text()).replace("[gene]", gene), self)]
+            self.geneList += [AnalyserThread(gene, str(self.outputFolderInput.text()).replace("[gene]", gene), self, self.analyser)]
             self.queueTabs.insertTab(-1, gene)
 
         self.geneNameInput.clear()
@@ -281,8 +314,10 @@ class Application(QMainWindow):
 
     def updateSettings(self):
         """Updates the settings file with the new settings."""
-        with open(settingsLocation, "wb") as settingsFile:
-                self.settings.write(settingsFile) # Write the updated settings to the file from the settings object
+        settingsFile = open(settingsLocation, "wb")
+        self.settings.write(settingsFile)
+#        with open(settingsLocation, "wb") as settingsFile:
+#            self.settings.write(settingsFile) # Write the updated settings to the file from the settings object
 
     def keyPressEvent(self, event):
         """Handle the user pressing the enter key -- add a new gene member to the queue."""
@@ -300,13 +335,23 @@ class Application(QMainWindow):
         self.aboutWindow = About()
         self.aboutWindow.show() # Show the about window
 
+class ImportThread(QThread):
+    def __init__(self, miRNA, TF, analyser):
+        QThread.__init__(self)
+        self.miRNA, self.TF, self.analyser = miRNA, TF, analyser
+
+    def run(self):
+        self.analyser.importData(self.miRNA, self.TF)
+
+    
+
 class AnalyserThread(QThread):
-    def __init__(self, geneName, miRNA, TF, destination, window):
+    def __init__(self, geneName, destination, window, analyser):
         """Creates the thread object with the properties as passed to the function."""
         QThread.__init__(self)
 
         # Initialise variables
-        self.geneName, self.miRNA, self.TF, self.destination, self.window = str(geneName), str(miRNA), str(TF), str(destination), window
+        self.geneName, self.destination, self.window, self.analyser = str(geneName), str(destination), window, analyser
         self.statuses = [ "Waiting..." ] # Default initial status
         self.progress = 0 # Waiting progress
 
@@ -329,7 +374,7 @@ class AnalyserThread(QThread):
         """Begins the thread and calls the analyser function from GeneAnalyser.py."""
         self.progress = 1 # Show that the analysis is in progress
 
-        if GeneAnalysis.Program(self.geneName, self.miRNA, self.TF, self.destination, self):
+        if self.analyser.Program(self.geneName, self.destination, self):
             self.progress = 2 # Show that the analysis has finished successfully
         else:
             self.progress = -1 # Show that analysis has finished unsuccessfully

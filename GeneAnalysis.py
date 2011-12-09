@@ -53,30 +53,28 @@ def getTop25(tfs,miRNAs,enrichments, percentile = 25):
 
     return topmiRNAs
 
-class Analyzer():
-    def __init__(self,mirnaLoc,tfLoc,destinationFolder):
-        self.mirnaDic = getMiRNA(mirnaLoc)
-        self.tfDic = getTF(tfLoc)
-        self.destinationFolder = destinationFolder
+class Analyser():
+    def importData(self,mirnaLoc,tfLoc):
         self.mirnaLoc = mirnaLoc
         self.tfLoc = tfLoc
-        return
+        self.mirnaDic = getMiRNA(mirnaLoc)
+        self.tfDic = getTF(tfLoc)
 
-    def Program(self,geneX,window):
+    def Program(self,geneX,destinationFolder,window):
         """This Function runs all the other base functions for sorting
          and dealing with the Database Data to return results to the user."""
 
         #Needs to check if selected/current directory already exist. Ie - Override?
         geneX = geneX.lower()
 
-        if self.destinationFolder == '':
+        if destinationFolder == '':
             window.feedback("No output directory specified.")
             return
 
-        elif self.destinationFolder[-1] == '/':
+        elif destinationFolder[-1] == '/':
             #Removes extra forward slash if exists
-            self.destinationFolder = self.destinationFolder[0:len(self.destinationFolder)-1]
-        if os.access(self.destinationFolder+'/',os.F_OK) and len(geneX):
+            destinationFolder = destinationFolder[0:len(destinationFolder)-1]
+        if os.access(destinationFolder+'/',os.F_OK) and len(geneX):
             if not window.confirm('Override?',"Files for This directory already exists.\nDo you want to override these files?"):
                 window.feedback('Directory will not be Overridden.')
                 return False
@@ -138,7 +136,7 @@ class Analyzer():
 
         #Writes the data to files.
         window.feedback('Writing Data To Files.')
-        writeData(geneX,intersections,enrichments,top25percent,self.destinationFolder)
+        writeData(geneX,intersections,enrichments,top25percent,destinationFolder)
 
-        window.feedback('Operations Completed Successfully.\nData saved to: '+str(self.destinationFolder))
+        window.feedback('Operations Completed Successfully.\nData saved to: '+str(destinationFolder))
         return True #If true, Main.py creates a "View Data" button for the user to access.
