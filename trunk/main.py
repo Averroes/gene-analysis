@@ -1,8 +1,10 @@
 __author__ = 'cwhi19 and mgeb1'
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 import sys, ConfigParser, GeneAnalysis, DataRep, os
 from PyQt4.Qt import *
+
+#TODO: need to work on changing the way the "Analyse" and "Add to list" buttons work. Merging would be extreemly helpful!
 
 settingsLocation = "settings.ini"
 
@@ -187,10 +189,17 @@ class Application(QMainWindow):
         self.analyserThread.start()
 
     def imported(self):
-        self.dataImported = True
         self.databaseImportButton.show()
         self.databaseProgress.hide()
         self.analyseButton.setDisabled(False)
+        if len(self.analyserThread.miRNA) and len(self.analyserThread.TF):
+            self.dataImported = True
+            self.databaseImportButton.setText('Databases Loaded! - Click to Reload :)')
+        else:
+            self.dataImported = False
+            self.databaseImportButton.setText('Database Loading Failed ): - Click to Try Again')
+
+            
 
     def addToQueue(self):
         """Adds a new gene member (AnalyserThread object) to the queue based on data in textboxes."""
@@ -203,7 +212,8 @@ class Application(QMainWindow):
         genes = genesToAdd.split(',') # Split the genes on commas
 
         for gene in genes: # Create a thread object for each gene and add to the end of the queue
-            self.geneList += [AnalyserThread(gene, str(self.outputFolderInput.text()).replace("[gene]", gene), self, self.analyser)]
+            gene = str(gene).lower()
+            self.geneList += [AnalyserThread(gene, str(self.outputFolderInput.text()).replace("[gene]", gene) if self.outputSet is False else str(self.outputFolderInput.text()+'/'+gene).replace("[gene]", gene), self, self.analyser)]
             self.queueTabs.insertTab(-1, gene)
 
         self.geneNameInput.clear()
