@@ -60,12 +60,14 @@ class Analyser():
         self.mirnaDic = getMiRNA(mirnaLoc)
         self.tfDic = getTF(tfLoc)
 
+
     def Program(self,geneX,destinationFolder,window):
         """This Function runs all the other base functions for sorting
          and dealing with the Database Data to return results to the user."""
 
         #Needs to check if selected/current directory already exist. Ie - Override?
         geneX = geneX.lower()
+        destinationFolder = destinationFolder.replace('\\','/')
 
         if destinationFolder == '':
             window.feedback("No output directory specified.")
@@ -75,7 +77,7 @@ class Analyser():
             #Removes extra forward slash if exists
             destinationFolder = destinationFolder[0:len(destinationFolder)-1]
         if os.access(destinationFolder+'/',os.F_OK) and len(geneX):
-            if not window.confirm('Override?',"Files for This directory already exists.\nDo you want to override these files?"):
+            if not window.confirm('Override?',"Files for the directory...\n\n" + destinationFolder+'/'+"\n\n...already exists.\nDo you want to override these files?"):
                 window.feedback('Directory will not be Overridden.')
                 return False
 
