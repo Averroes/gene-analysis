@@ -1,5 +1,5 @@
 __author__ = 'cwhi19 and mgeb1'
-__version__ = '0.3.1'
+__version__ = '0.4.0'
 
 import sys, ConfigParser, GeneAnalysis, DataRep, os
 from PyQt4.Qt import *
@@ -74,25 +74,43 @@ class Application(QMainWindow):
         self.grid.addWidget(self.outputBrowse, 4, 2)
         self.outputSet = False
 
+        self.grid.addWidget(QLabel('Stack Top Mirna Results?'),5,0,1,1,Qt.Alignment(4)) # Rows for Top MiRNA options.
+        self.mergeCheckBox = QCheckBox()
+        self.grid.addWidget(self.mergeCheckBox,5,1,1,1)
+
+        self.grid.addWidget(QLabel('Top-MiRNA Threshold (%)'),6,0)
+        self.topMirnaThresholdLabel = QLineEdit()
+        self.grid.addWidget(self.topMirnaThresholdLabel,6,1,1,2)
+
+        self.grid.addWidget(QLabel('0%'),7,0,1,1,Qt.Alignment(2))
+        self.topMirnaThreshold = QSlider()
+        self.topMirnaThreshold.setOrientation(1) #1 for Horizontal, 2 for Vertical
+        self.topMirnaThreshold.setRange(0,100)
+        self.topMirnaThreshold.setValue(25)
+        self.topMirnaThreshold.setTracking(True)
+        self.grid.addWidget(self.topMirnaThreshold,7,1)
+        self.grid.addWidget(QLabel('100%'),7,2)
+
+
         self.queueButton = QPushButton("Add to queue") # Button to add gene information to queue
         self.queueButton.setAutoDefault(True)
-        self.grid.addWidget(self.queueButton, 5, 0, 1, 3)
+        self.grid.addWidget(self.queueButton, 8, 0, 1, 3)
 
         self.analyseButton = QPushButton("Begin Analysis") # Button to begin analysis of genes in queue
-        self.grid.addWidget(self.analyseButton, 6, 0, 1, 3)
+        self.grid.addWidget(self.analyseButton, 9, 0, 1, 3)
         self.analyseButton.setDisabled(True)
 
         self.queueTabs = QTabBar() # Tabbed interface showing gene queue
         self.queueTabs.setTabsClosable(True)
         self.queueTabs.setMovable(True)
-        self.grid.addWidget(self.queueTabs, 7, 0, 1, 3)
+        self.grid.addWidget(self.queueTabs, 10, 0, 1, 3)
 
         self.statuses = QLabel("") # Empty status label, is later updated with information relating to gene
-        self.grid.addWidget(self.statuses, 8, 0, 1, 3)
+        self.grid.addWidget(self.statuses, 11, 0, 1, 3)
         self.statuses.setAlignment(Qt.AlignTop)
 
         self.dataViewButton = QPushButton("View results") # Add button for viewing generated results, only visible if analysis succeeded
-        self.grid.addWidget(self.dataViewButton, 9, 0, 1, 3)
+        self.grid.addWidget(self.dataViewButton, 12, 0, 1, 3)
         self.dataViewButton.hide()
 
         # Connect events (eg. button pushes) to appropriate events
@@ -107,6 +125,9 @@ class Application(QMainWindow):
         self.connect(self.queueTabs, SIGNAL('currentChanged(int)'), self.updateStatuses)
         self.connect(self.queueTabs, SIGNAL('tabCloseRequested(int)'), lambda x: self.removeGene(x))
         self.connect(self.queueTabs, SIGNAL('tabMoved(int,int)'), lambda x, y: self.moveGene(x, y))
+        self.connect(self.topMirnaThreshold, SIGNAL('sliderReleased()'),self.changeThreshold)
+        self.connect(self.topMirnaThresholdLabel,SIGNAL('textChanged(QString)'),self.changeThresholdFromTxt)
+        self.connect(self.topMirnaThresholdLabel,SIGNAL('editingFinished()'),self.reEnterThreshold)
 
         # Handle settings.ini
         self.settings = ConfigParser.RawConfigParser() # Initialise settings object for program duration
@@ -143,6 +164,23 @@ class Application(QMainWindow):
             self.settings.add_section('recentData')
             self.settings.set('recentData','Locations','')
             self.updateSettings()
+
+    def changeThreshold(self):
+        self.topMirnaThresholdLabel.setText(str(self.topMirnaThreshold.value()))
+
+    def changeThresholdFromTxt(self):
+        try:
+            string = self.topMirnaThresholdLabel.text().replace(' ','')
+            value = int(string)
+            self.topMirnaThreshold.setValue(value)
+        except ValueError:
+            pass
+
+    def reEnterThreshold(self):
+        if not self.topMirnaThresholdLabel.text():
+            self.topMirnaThresholdLabel.setText('25')
+            self.topMirnaThreshold.setValue(25)
+
 
     def analyse(self):
         """Begin analysis of next gene member of the queue."""
@@ -213,7 +251,7 @@ class Application(QMainWindow):
 
         for gene in genes: # Create a thread object for each gene and add to the end of the queue
             gene = str(gene).lower()
-            self.geneList += [AnalyserThread(gene, str(self.outputFolderInput.text()).replace("[gene]", gene) if self.outputSet is False else str(self.outputFolderInput.text()+'/'+gene).replace("[gene]", gene), self, self.analyser)]
+            self.geneList += [AnalyserThread(gene, str(self.outputFolderInput.text()).replace("[gene]", gene) if self.outputSet is False else str(self.outputFolderInput.text()+'/'+gene).replace("[gene]", gene), self, self.analyser,self.topMirnaThreshold.value())]
             self.queueTabs.insertTab(-1, gene)
 
         self.geneNameInput.clear()
@@ -345,6 +383,7 @@ class Application(QMainWindow):
         self.aboutWindow = About()
         self.aboutWindow.show() # Show the about window
 
+
 class ImportThread(QThread):
     def __init__(self, miRNA, TF, analyser):
         QThread.__init__(self)
@@ -356,14 +395,15 @@ class ImportThread(QThread):
     
 
 class AnalyserThread(QThread):
-    def __init__(self, geneName, destination, window, analyser):
+    def __init__(self, geneName, destination, window, analyser,threshold):
         """Creates the thread object with the properties as passed to the function."""
         QThread.__init__(self)
 
         # Initialise variables
-        self.geneName, self.destination, self.window, self.analyser = str(geneName), str(destination), window, analyser
+        self.geneName, self.destination, self.window, self.analyser, self.threshold = str(geneName), str(destination), window, analyser, threshold
         self.statuses = [ "Waiting..." ] # Default initial status
         self.progress = 0 # Waiting progress
+        self.stackableMirnaData = {}
 
     def feedback(self, string):
         """"Updates the status list for the analysis thread."""
@@ -384,10 +424,14 @@ class AnalyserThread(QThread):
         """Begins the thread and calls the analyser function from GeneAnalyser.py."""
         self.progress = 1 # Show that the analysis is in progress
 
-        if self.analyser.Program(self.geneName, self.destination, self):
+        if self.analyser.Program(self.geneName, self.destination, self, self.threshold):
             self.progress = 2 # Show that the analysis has finished successfully
         else:
             self.progress = -1 # Show that analysis has finished unsuccessfully
+
+    def returnTopMirnas(self,topMirnas):
+        #TODO: Needs a function created so that TopMirna Dictionaries can be added together.
+        return
 
 
 class HelpDocumentation(QWidget):

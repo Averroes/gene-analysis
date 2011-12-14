@@ -1,7 +1,7 @@
 from DatabaseImport import *
 import os
 __author__ = 'cwhi19 and mgeb1'
-def writeData(geneX,intersections,enrichments,topMirnas,destination):
+def writeData(geneX,intersections,enrichments,topMirnas,destination,threshold):
     """After sorting the data, writes from the Program into text and csv files."""
     folderList = destination.split('/')
     runningDirectory = ''
@@ -13,7 +13,7 @@ def writeData(geneX,intersections,enrichments,topMirnas,destination):
     txt.write('MiRNA\tTF\tEnrichment Score\tNumber of Genes\tGenes') #Titles for each column.
     csv = open(destination+'/'+str(geneX)+' - Spreadsheet.csv','w')
     csv.write('MiRNA,TF,Enrichment Score,Number of Genes')
-    txt2 = open(destination+'/'+str(geneX)+' - TopMirna\'s.txt','w')
+    txt2 = open(destination+'/'+str(geneX)+' - Top'+str(threshold)+'PercentMirna\'s.txt','w')
     txt2.write('MiRNA\tFrequency')
     orderedCombinations=sorted(intersections,key=lambda x:len(intersections[x]),reverse=True)
     for combination in orderedCombinations:
@@ -33,7 +33,7 @@ def removeDir(dir):
         if dir == directory:
             break
 
-def getTop25(tfs,miRNAs,enrichments, percentile = 25):
+def getTopX(tfs,miRNAs,enrichments, percentile = 25):
     """This program returns a frequency dictionary for the top 25% of MiRNA's in each tf set of combinations.
     Should return the most common and most important MiRNA's specific to gene X. Data is used for Word Cloud"""
     enrichSort = sorted(enrichments,key= lambda x:enrichments[x],reverse=True)
@@ -61,7 +61,7 @@ class Analyser():
         self.tfDic = getTF(tfLoc)
 
 
-    def Program(self,geneX,destinationFolder,window):
+    def Program(self,geneX,destinationFolder,window,threshold,stackable=False):
         """This Function runs all the other base functions for sorting
          and dealing with the Database Data to return results to the user."""
 
@@ -134,11 +134,14 @@ class Analyser():
 
         #Obtains the top 25% of each TF's mirna's based on enrichment score, returning them as a frequency dictionary.
         window.feedback('Obtaining frequency list of most common MiRNA\'s for '+str(geneX))
-        top25percent = getTop25(Tfs,Mirnas,enrichments)
+        topXpercent = getTopX(Tfs,Mirnas,enrichments,threshold)
+        if stackable:
+            #TODO: Create a function that relays this back, in main...            window.returnTopMirnas(topXpercent)
+            pass
 
         #Writes the data to files.
         window.feedback('Writing Data To Files.')
-        writeData(geneX,intersections,enrichments,top25percent,destinationFolder)
+        writeData(geneX,intersections,enrichments,topXpercent,destinationFolder,threshold)
 
         window.feedback('Operations Completed Successfully.\nData saved to: '+str(destinationFolder))
         return True #If true, Main.py creates a "View Data" button for the user to access.
