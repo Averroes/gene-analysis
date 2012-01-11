@@ -73,7 +73,7 @@ class Analyser():
             if not os.access(runningDirectory + '/MergedTopMirnaData' + str(name) + '.txt',os.R_OK):
                 file = open(runningDirectory + '/MergedTopMirnaData' + str(name) + '.txt','w')
                 file.write('MiRNA\tFrequency')
-                for Mirna in self.stackData:
+                for Mirna in sorted(self.stackData.keys(),key=lambda x:self.stackData[x],reverse=True):
                     file.write('\n'+str(Mirna)+'\t'+str(self.stackData[Mirna]))
                 validName=True
             else:
@@ -92,6 +92,11 @@ class Analyser():
 
         #Needs to check if selected/current directory already exist. Ie - Override?
         geneX = geneX.lower()
+        if geneX == 'break':
+            self.saveStackData()
+            self.stackData = {}
+            return
+
         destinationFolder = destinationFolder.replace('\\','/')
 
         if destinationFolder == '':
@@ -173,9 +178,9 @@ class Analyser():
                         self.stackData.update({mirna:topXpercent[mirna]})
                 else:
                     self.stackData = {mirna:topXpercent[mirna]}
-#        else:
-#            self.saveStackData()
-#            self.stackData = {}
+        else:
+            self.saveStackData()
+            self.stackData = {}
 
 
         #Writes the data to files.
