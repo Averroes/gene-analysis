@@ -1,5 +1,5 @@
 __author__ = 'cwhi19 and mgeb1'
-__version__ = '0.4.1'
+__version__ = '0.4.2'
 
 import sys, ConfigParser, GeneAnalysis, DataRep, os
 from PyQt4.Qt import *
@@ -81,6 +81,7 @@ class Application(QMainWindow):
 
         self.grid.addWidget(QLabel('Top-MiRNA Threshold (%)'),6,0) #Threshold for "Top X percent of Mirna" data, in percent
         self.topMirnaThresholdLabel = QLineEdit()
+        self.topMirnaThresholdLabel.setText('25')
         self.grid.addWidget(self.topMirnaThresholdLabel,6,1,1,2)
 
         self.grid.addWidget(QLabel('0%'),7,0,1,1,Qt.Alignment(2))
@@ -192,10 +193,8 @@ class Application(QMainWindow):
             geneFound = False
             self.outputSet = False
             self.analyseButton.setDisabled(False) # Make analysis button enabled (in case gene to analyse cannot be found)
-            allFinnished = True
             for gene in self.geneList:
                 if not gene.progress and not geneFound: # If the progress is 0 and an earlier gene has not been found
-                    allFinnished = False
                     geneFound = True
                     gene.finished.connect(lambda: self.finishedAnalysis(gene)) # Link the end of the thread object to this function
                     gene.start() # Begin the analysis thread
@@ -204,9 +203,6 @@ class Application(QMainWindow):
 
                     self.connect(gene, SIGNAL("updateStatuses()"), self.updateStatuses)
                     # Connect emission of status update signal from thread to the actual status update in the Application object
-            if allFinnished:
-                self.analyser.saveStackData()
-                self.analyser.stackData = {}
 
         else:
             print "Data not imported!" #TODO: add feedback
@@ -259,6 +255,8 @@ class Application(QMainWindow):
             gene = str(gene).lower()
             self.geneList += [AnalyserThread(gene, str(self.outputFolderInput.text()).replace("[gene]", gene) if self.outputSet is False else str(self.outputFolderInput.text()+'/'+gene).replace("[gene]", gene), self, self.analyser,self.topMirnaThreshold.value(),self.mergeCheckBox.checkState())]
             self.queueTabs.insertTab(-1, gene)
+        if self.mergeCheckBox.checkState() == 2:
+            self.geneList += [AnalyserThread('break','',self,self.analyser,'','')]
 
         self.geneNameInput.clear()
         self.outputFolderInput.clear() # Clear the form for the next submission
