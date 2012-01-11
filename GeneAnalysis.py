@@ -54,12 +54,37 @@ def getTopX(tfs,miRNAs,enrichments, percentile = 25):
     return topmiRNAs
 
 class Analyser():
+    def __init__(self):
+        self.stackData = {}
+        self.lastDestination = ''
+
+    def saveStackData(self):
+        data = self.stackData
+        folderList = self.lastDestination.split('/')
+        runningDirectory = ''
+        for folder in folderList[0:-1]:
+            runningDirectory += folder + '/'
+            if not os.access(runningDirectory,os.R_OK):
+                os.mkdir(runningDirectory)
+        validName = False
+        print runningDirectory
+        name = 0
+        while not validName:
+            if not os.access(runningDirectory + '/MergedTopMirnaData' + str(name) + '.txt',os.R_OK):
+                file = open(runningDirectory + '/MergedTopMirnaData' + str(name) + '.txt','w')
+                file.write('MiRNA\tFrequency')
+                for Mirna in self.stackData:
+                    file.write('\n'+str(Mirna)+'\t'+str(self.stackData[Mirna]))
+                validName=True
+            else:
+                name += 1
+        self.stackData = {}
+
     def importData(self,mirnaLoc,tfLoc):
         self.mirnaLoc = mirnaLoc
         self.tfLoc = tfLoc
         self.mirnaDic = getMiRNA(mirnaLoc)
         self.tfDic = getTF(tfLoc)
-
 
     def Program(self,geneX,destinationFolder,window,threshold,stackable=False):
         """This Function runs all the other base functions for sorting
@@ -80,6 +105,8 @@ class Analyser():
             if not window.confirm('Override?',"Files for the directory...\n\n" + destinationFolder+'/'+"\n\n...already exists.\nDo you want to override these files?"):
                 window.feedback('Directory will not be Overridden.')
                 return False
+
+        self.lastDestination = destinationFolder
 
         Mirnas = []
         for Mirna in self.mirnaDic:
@@ -135,9 +162,21 @@ class Analyser():
         #Obtains the top 25% of each TF's mirna's based on enrichment score, returning them as a frequency dictionary.
         window.feedback('Obtaining frequency list of most common MiRNA\'s for '+str(geneX))
         topXpercent = getTopX(Tfs,Mirnas,enrichments,threshold)
-        if stackable:
-            #TODO: Create a function that relays this back, in main...            window.returnTopMirnas(topXpercent)
-            pass
+        if stackable==2:
+            #TODO: Not sure is this is working as you would want it to.
+            for mirna in topXpercent:
+                if self.stackData:
+                    if mirna in self.stackData.keys():
+                        newVal = self.stackData[mirna] + topXpercent[mirna]
+                        self.stackData.update({mirna:newVal})
+                    else:
+                        self.stackData.update({mirna:topXpercent[mirna]})
+                else:
+                    self.stackData = {mirna:topXpercent[mirna]}
+#        else:
+#            self.saveStackData()
+#            self.stackData = {}
+
 
         #Writes the data to files.
         window.feedback('Writing Data To Files.')

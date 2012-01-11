@@ -1,5 +1,5 @@
 __author__ = 'cwhi19 and mgeb1'
-__version__ = '0.4.0'
+__version__ = '0.4.1'
 
 import sys, ConfigParser, GeneAnalysis, DataRep, os
 from PyQt4.Qt import *
@@ -77,8 +77,9 @@ class Application(QMainWindow):
         self.grid.addWidget(QLabel('Stack Top Mirna Results?'),5,0,1,1,Qt.Alignment(4)) # Rows for Top MiRNA options.
         self.mergeCheckBox = QCheckBox()
         self.grid.addWidget(self.mergeCheckBox,5,1,1,1)
+        self.mirnaMerge = []
 
-        self.grid.addWidget(QLabel('Top-MiRNA Threshold (%)'),6,0)
+        self.grid.addWidget(QLabel('Top-MiRNA Threshold (%)'),6,0) #Threshold for "Top X percent of Mirna" data, in percent
         self.topMirnaThresholdLabel = QLineEdit()
         self.grid.addWidget(self.topMirnaThresholdLabel,6,1,1,2)
 
@@ -135,6 +136,7 @@ class Application(QMainWindow):
             self.settings.read(settingsLocation)
             self.miRNAFileInput.setText(self.settings.get('locations', 'miRNA'))
             self.TFFileInput.setText(self.settings.get('locations', 'TF'))
+            self.importData()
         except ConfigParser.NoSectionError: # If settings.ini not in correct format (ie. headers not found), set values to defaults
             self.miRNAFileInput.setText("Resources/miRNA.txt")
             self.TFFileInput.setText("Resources/TF.txt")
@@ -190,8 +192,10 @@ class Application(QMainWindow):
             geneFound = False
             self.outputSet = False
             self.analyseButton.setDisabled(False) # Make analysis button enabled (in case gene to analyse cannot be found)
+            allFinnished = True
             for gene in self.geneList:
                 if not gene.progress and not geneFound: # If the progress is 0 and an earlier gene has not been found
+                    allFinnished = False
                     geneFound = True
                     gene.finished.connect(lambda: self.finishedAnalysis(gene)) # Link the end of the thread object to this function
                     gene.start() # Begin the analysis thread
@@ -200,6 +204,10 @@ class Application(QMainWindow):
 
                     self.connect(gene, SIGNAL("updateStatuses()"), self.updateStatuses)
                     # Connect emission of status update signal from thread to the actual status update in the Application object
+            if allFinnished:
+                self.analyser.saveStackData()
+                self.analyser.stackData = {}
+
         else:
             print "Data not imported!" #TODO: add feedback
 
@@ -237,8 +245,6 @@ class Application(QMainWindow):
             self.dataImported = False
             self.databaseImportButton.setText('Database Loading Failed ): - Click to Try Again')
 
-            
-
     def addToQueue(self):
         """Adds a new gene member (AnalyserThread object) to the queue based on data in textboxes."""
 
@@ -251,7 +257,7 @@ class Application(QMainWindow):
 
         for gene in genes: # Create a thread object for each gene and add to the end of the queue
             gene = str(gene).lower()
-            self.geneList += [AnalyserThread(gene, str(self.outputFolderInput.text()).replace("[gene]", gene) if self.outputSet is False else str(self.outputFolderInput.text()+'/'+gene).replace("[gene]", gene), self, self.analyser,self.topMirnaThreshold.value())]
+            self.geneList += [AnalyserThread(gene, str(self.outputFolderInput.text()).replace("[gene]", gene) if self.outputSet is False else str(self.outputFolderInput.text()+'/'+gene).replace("[gene]", gene), self, self.analyser,self.topMirnaThreshold.value(),self.mergeCheckBox.checkState())]
             self.queueTabs.insertTab(-1, gene)
 
         self.geneNameInput.clear()
@@ -395,12 +401,12 @@ class ImportThread(QThread):
     
 
 class AnalyserThread(QThread):
-    def __init__(self, geneName, destination, window, analyser,threshold):
+    def __init__(self, geneName, destination, window, analyser, threshold, stackable):
         """Creates the thread object with the properties as passed to the function."""
         QThread.__init__(self)
 
         # Initialise variables
-        self.geneName, self.destination, self.window, self.analyser, self.threshold = str(geneName), str(destination), window, analyser, threshold
+        self.geneName, self.destination, self.window, self.analyser, self.threshold, self.stackable = str(geneName), str(destination), window, analyser, threshold, stackable
         self.statuses = [ "Waiting..." ] # Default initial status
         self.progress = 0 # Waiting progress
         self.stackableMirnaData = {}
@@ -423,16 +429,10 @@ class AnalyserThread(QThread):
     def run(self):
         """Begins the thread and calls the analyser function from GeneAnalyser.py."""
         self.progress = 1 # Show that the analysis is in progress
-
-        if self.analyser.Program(self.geneName, self.destination, self, self.threshold):
+        if self.analyser.Program(self.geneName, self.destination, self, self.threshold,self.stackable):
             self.progress = 2 # Show that the analysis has finished successfully
         else:
             self.progress = -1 # Show that analysis has finished unsuccessfully
-
-    def returnTopMirnas(self,topMirnas):
-        #TODO: Needs a function created so that TopMirna Dictionaries can be added together.
-        return
-
 
 class HelpDocumentation(QWidget):
     def __init__(self):
