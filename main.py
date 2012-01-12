@@ -1,5 +1,5 @@
 __author__ = 'cwhi19 and mgeb1'
-__version__ = '0.4.2'
+__version__ = '0.4.3'
 
 import sys, ConfigParser, GeneAnalysis, DataRep, os
 from PyQt4.Qt import *
@@ -196,7 +196,7 @@ class Application(QMainWindow):
             for gene in self.geneList:
                 if not gene.progress and not geneFound: # If the progress is 0 and an earlier gene has not been found
                     geneFound = True
-                    gene.finished.connect(lambda: self.finishedAnalysis(gene)) # Link the end of the thread object to this function
+                    gene.finished.connect(lambda a=gene: self.finishedAnalysis(a)) # Link the end of the thread object to this function
                     gene.start() # Begin the analysis thread
 
                     self.analyseButton.setDisabled(True) # Prevent the user from trying to analyse data while process is running
@@ -212,6 +212,10 @@ class Application(QMainWindow):
         generated data to the list of recent data and begins the analysis of the next gene in the queue."""
         if gene.progress == 2: # If the gene analysis finished successfully
             self.addRecentLoc(gene.destination) # Add the gene path to recently generated data list
+        if gene.geneName.lower() == 'break' and self.analyser.lastMergeFile != '': #Tests for the end of a set of "Stacked" data, if so, views the results.
+            self.viewer = DataRep.StackResults(self.analyser.lastMergeFile)
+            self.viewer.show()
+
         self.analyse()
 
     def importData(self):
@@ -255,8 +259,8 @@ class Application(QMainWindow):
             gene = str(gene).lower()
             self.geneList += [AnalyserThread(gene, str(self.outputFolderInput.text()).replace("[gene]", gene) if self.outputSet is False else str(self.outputFolderInput.text()+'/'+gene).replace("[gene]", gene), self, self.analyser,self.topMirnaThreshold.value(),self.mergeCheckBox.checkState())]
             self.queueTabs.insertTab(-1, gene)
-        if self.mergeCheckBox.checkState() == 2:
-            self.geneList += [AnalyserThread('break','',self,self.analyser,'','')]
+        if self.mergeCheckBox.checkState() == 2: #Once all genes have been added, if "Stack" feature is on, add's a break after to separate the data from ongoing generations.
+            self.geneList += [AnalyserThread('break','',self,self.analyser,'','')] #Will cause data to save in Gene Analysis when passed through.
 
         self.geneNameInput.clear()
         self.outputFolderInput.clear() # Clear the form for the next submission
