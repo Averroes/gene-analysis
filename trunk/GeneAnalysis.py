@@ -55,30 +55,37 @@ def getTopX(tfs,miRNAs,enrichments, percentile = 25):
 
 class Analyser():
     def __init__(self):
-        self.stackData = {}
-        self.lastDestination = ''
+        self.stackData = {} #Ongoing data that is congregated though generations.
+        self.lastDestination = '' #Used to save the stack data to a localised location (where data generations are)
+        self.stackNames = [] #To add the names of Target Gene's when saving stackData
+        self.lastMergeFile = '' #A loci for when "finished" a break loop, to open the saved data.
 
     def saveStackData(self):
-        data = self.stackData
+        """Saves the StackData, which is a congregation of a set of analysed genes' TopMirna lists"""
         folderList = self.lastDestination.split('/')
         runningDirectory = ''
-        for folder in folderList[0:-1]:
+        for folder in folderList[0:-1]: #Sets the directory one level up from where the normal generation data was last saved.
             runningDirectory += folder + '/'
             if not os.access(runningDirectory,os.R_OK):
                 os.mkdir(runningDirectory)
         validName = False
-        print runningDirectory
         name = 0
         while not validName:
             if not os.access(runningDirectory + '/MergedTopMirnaData' + str(name) + '.txt',os.R_OK):
                 file = open(runningDirectory + '/MergedTopMirnaData' + str(name) + '.txt','w')
-                file.write('MiRNA\tFrequency')
+                title = 'Data of Genes:\t'
+                for gene in self.stackNames:
+                    title+= ' '+str(gene)
+                file.write(title)
+                file.write('\nMiRNA\tFrequency')
                 for Mirna in sorted(self.stackData.keys(),key=lambda x:self.stackData[x],reverse=True):
                     file.write('\n'+str(Mirna)+'\t'+str(self.stackData[Mirna]))
+                self.lastMergeFile = str(runningDirectory) + '/MergedTopMirnaData' + str(name) + '.txt'
                 validName=True
             else:
                 name += 1
         self.stackData = {}
+        self.stackNames = []
 
     def importData(self,mirnaLoc,tfLoc):
         self.mirnaLoc = mirnaLoc
@@ -95,6 +102,7 @@ class Analyser():
         if geneX == 'break':
             self.saveStackData()
             self.stackData = {}
+            self.stackNames = []
             return
 
         destinationFolder = destinationFolder.replace('\\','/')
@@ -178,10 +186,11 @@ class Analyser():
                         self.stackData.update({mirna:topXpercent[mirna]})
                 else:
                     self.stackData = {mirna:topXpercent[mirna]}
+            self.stackNames.append(geneX)
         else:
             self.saveStackData()
             self.stackData = {}
-
+            self.stackNames = []
 
         #Writes the data to files.
         window.feedback('Writing Data To Files.')

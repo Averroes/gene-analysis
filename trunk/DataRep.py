@@ -1,8 +1,7 @@
-import time
-
 __author__ = 'cwhi19 and mgeb1'
 
 import sys, os
+import time
 from PyQt4.Qt import *
 
 class DataRep(QWidget):
@@ -249,3 +248,41 @@ class ViewGenes(QWidget):
             Item = QTableWidgetItem(str(gene))
             self.table.setItem(row,0,Item)
             row+=1
+
+class StackResults(QWidget):
+    """A widget viewer to view the results of a merged Top MiRNA file.
+    Same code as used in MiRNA generation above, but able to stand alone."""
+    def __init__(self, mirnaFileLoc):
+        QWidget.__init__(self)
+        self.setWindowTitle('Combined Top-Mirna Results')
+        self.grid1 = QGridLayout(self)
+        mirnaFile = open(mirnaFileLoc) #Opens the Data file of the gene name.
+        mirnaContributingGenes = mirnaFile.readline().replace('\n','')
+        self.grid1.addWidget(QLabel(mirnaContributingGenes),0,0)
+        mirnaHeaders = mirnaFile.readline().replace('\n','').split('\t')
+        mirnaData = []
+        for line in mirnaFile:
+            mirnaData += [line.replace('\n','').split('\t')]
+        mirnaData = sorted(mirnaData,key=lambda x: int(x[1]),reverse=True)
+        self.mirnaTable = QTableWidget()
+        for row in range(0,len(mirnaHeaders)):
+            self.mirnaTable.insertColumn(0)
+        for column in range(0,len(mirnaData)):
+            self.mirnaTable.insertRow(0)
+        for row in range(0,len(mirnaData)):
+            for column in range(0,len(mirnaHeaders)):
+                item = QTableWidgetItem(str(mirnaData[row][column]))
+                self.mirnaTable.setItem(row,column,item)
+        self.mirnaTable.setHorizontalHeaderLabels(mirnaHeaders)
+        self.grid1.addWidget(self.mirnaTable,1,0)
+        self.resize(QSize(400,200))
+        self.setColumnSizes()
+
+    def resizeEvent(self, *args, **kwargs):
+        """Catches the resizeEvent call of QWidget, allowing us to respecify the column sizes."""
+        self.setColumnSizes()
+
+    def setColumnSizes(self):
+        size2 = (int(str(QWidget.size(self)).split("(")[1].split(',')[0])-70)/self.mirnaTable.columnCount()
+        for head in range(0,self.mirnaTable.columnCount()):
+            self.mirnaTable.setColumnWidth(head,size2)
