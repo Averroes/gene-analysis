@@ -1,8 +1,8 @@
 from DatabaseImport import *
 import os
 __author__ = 'cwhi19 and mgeb1'
-def writeData(geneX,intersections,enrichments,topMirnas,destination,threshold):
-    """After sorting the data, writes from the Program into text and csv files."""
+def writeData(geneX,intersections,enrichments,destination):#,threshold,topMirnas):
+    """After sorting the data, writes from the Program into text and csv files. Note:TopMirna functionality removed."""
     folderList = destination.split('/')
     runningDirectory = ''
     for folder in folderList:
@@ -13,15 +13,15 @@ def writeData(geneX,intersections,enrichments,topMirnas,destination,threshold):
     txt.write('MiRNA\tTF\tEnrichment Score\tNumber of Genes\tGenes') #Titles for each column.
     csv = open(destination+'/'+str(geneX)+' - Spreadsheet.csv','w')
     csv.write('MiRNA,TF,Enrichment Score,Number of Genes')
-    txt2 = open(destination+'/'+str(geneX)+' - Top'+str(threshold)+'PercentMirna\'s.txt','w')
-    txt2.write('MiRNA\tFrequency')
+#    txt2 = open(destination+'/'+str(geneX)+' - Top'+str(threshold)+'Mirna\'s.txt','w')
+#    txt2.write('MiRNA\tFrequency')
     orderedCombinations=sorted(intersections,key=lambda x:len(intersections[x]),reverse=True)
     for combination in orderedCombinations:
         txt.write('\n'+combination[0]+'\t'+combination[1]+'\t'+str(enrichments[combination])+'\t'+str(len(intersections[combination]))+'\t'+str(intersections[combination]))
         csv.write('\n'+combination[0]+','+combination[1]+','+str(enrichments[combination])+','+str(len(intersections[combination])))
-    for Mirna in topMirnas:
-        txt2.write('\n'+str(Mirna)+'\t'+str(topMirnas[Mirna]))
-    txt.close(),csv.close(),txt2.close()
+#    for Mirna in topMirnas:
+#        txt2.write('\n'+str(Mirna)+'\t'+str(topMirnas[Mirna]))
+    txt.close(),csv.close()#,txt2.close()
     return
 
 def removeDir(dir):
@@ -93,7 +93,7 @@ class Analyser():
         self.mirnaDic = getMiRNA(mirnaLoc)
         self.tfDic = getTF(tfLoc)
 
-    def Program(self,geneX,destinationFolder,window,threshold,stackable=False):
+    def Program(self,geneX,destinationFolder,window):#,threshold,stackable=False):
         """This Function runs all the other base functions for sorting
          and dealing with the Database Data to return results to the user."""
 
@@ -172,29 +172,30 @@ class Analyser():
                 enrichment = float(len(intersections[combinationName]))/float(len(set(self.mirnaDic[combinationName[0]])))*100
                 enrichments.update({combinationName:enrichment}) #Creates form Key = (Mirna,TF) and Value = Enrichment Integer
 
-        #Obtains the top 25% of each TF's mirna's based on enrichment score, returning them as a frequency dictionary.
-        window.feedback('Obtaining frequency list of most common MiRNA\'s for '+str(geneX))
-        topXpercent = getTopX(Tfs,Mirnas,enrichments,threshold)
-        if stackable==2:
-            #TODO: Not sure is this is working as you would want it to.
-            for mirna in topXpercent:
-                if self.stackData:
-                    if mirna in self.stackData.keys():
-                        newVal = self.stackData[mirna] + topXpercent[mirna]
-                        self.stackData.update({mirna:newVal})
-                    else:
-                        self.stackData.update({mirna:topXpercent[mirna]})
-                else:
-                    self.stackData = {mirna:topXpercent[mirna]}
-            self.stackNames.append(geneX)
-        else:
-            self.saveStackData()
-            self.stackData = {}
-            self.stackNames = []
+    #FUNCTION TEMPORARILY REMOVED, AS GENERATING TOP(x)Percent TF'S IN DataRep. Therefore no stacking lists.
+#        #Obtains the top 25% of each TF's mirna's based on enrichment score, returning them as a frequency dictionary.
+#        window.feedback('Obtaining frequency list of most common MiRNA\'s for '+str(geneX))
+#        topXpercent = getTopX(Tfs,Mirnas,enrichments,threshold)
+#        if stackable==2:
+#            #TODO: Not sure is this is working as you would want it to.
+#            for mirna in topXpercent:
+#                if self.stackData:
+#                    if mirna in self.stackData.keys():
+#                        newVal = self.stackData[mirna] + topXpercent[mirna]
+#                        self.stackData.update({mirna:newVal})
+#                    else:
+#                        self.stackData.update({mirna:topXpercent[mirna]})
+#                else:
+#                    self.stackData = {mirna:topXpercent[mirna]}
+#            self.stackNames.append(geneX)
+#        else:
+#            self.saveStackData()
+#            self.stackData = {}
+#            self.stackNames = []
 
         #Writes the data to files.
         window.feedback('Writing Data To Files.')
-        writeData(geneX,intersections,enrichments,topXpercent,destinationFolder,threshold)
+        writeData(geneX,intersections,enrichments,destinationFolder)#,threshold,topXpercent,)
 
         window.feedback('Operations Completed Successfully.\nData saved to: '+str(destinationFolder))
         return True #If true, Main.py creates a "View Data" button for the user to access.
