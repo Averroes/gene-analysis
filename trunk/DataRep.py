@@ -1,6 +1,6 @@
 __author__ = 'cwhi19 and mgeb1'
 
-import sys, os
+import sys, os, re
 import time
 from PyQt4.Qt import *
 
@@ -27,26 +27,35 @@ class DataRep(QWidget):
         QWidget.setMinimumSize(self,500,200) #Sets a minimum size, smaller wouldn't be any benefit.
 
 
-        self.miRNATab = QWidget()
+#        self.miRNATab = QWidget()
 
-        mirnaFile = open(geneFolder + geneName +  " - TopMirna\'s.txt") #Opens the Data file of the gene name.
-        mirnaHeaders = mirnaFile.readline().replace('\n','').split('\t')
-        mirnaData = []
-        for line in mirnaFile:
-            mirnaData += [line.replace('\n','').split('\t')]
-        mirnaData = sorted(mirnaData,key=lambda x: int(x[1]),reverse=True)
-        self.grid2 = QGridLayout(self.miRNATab)
-        self.mirnaTable = QTableWidget()
-        for row in range(0,len(mirnaHeaders)):
-            self.mirnaTable.insertColumn(0)
-        for column in range(0,len(mirnaData)):
-            self.mirnaTable.insertRow(0)
-        for row in range(0,len(mirnaData)):
-            for column in range(0,len(mirnaHeaders)):
-                item = QTableWidgetItem(str(mirnaData[row][column]))
-                self.mirnaTable.setItem(row,column,item)
-        self.mirnaTable.setHorizontalHeaderLabels(mirnaHeaders)
-        self.grid2.addWidget(self.mirnaTable,0,0)
+#        for dir,dirs,files in os.walk(geneFolder):
+#            fileNames = files
+#            break
+#        try:
+#            a = fileNames
+#        except AttributeError:
+#            fileNames = ''
+#        search = re.search(' - Top([0-9]*?)Mirna\'s\.txt',str(fileNames),re.IGNORECASE)
+#        percent = search.group(1) if search else '[unknown]'
+#        mirnaFile = open(geneFolder + geneName +  " - Top"+search.group(1)+"Mirna\'s.txt") #Opens the Data file of the gene name.
+#        mirnaHeaders = mirnaFile.readline().replace('\n','').split('\t')
+#        mirnaData = []
+#        for line in mirnaFile:
+#            mirnaData += [line.replace('\n','').split('\t')]
+#        mirnaData = sorted(mirnaData,key=lambda x: int(x[1]),reverse=True)
+#        self.grid2 = QGridLayout(self.miRNATab)
+#        self.mirnaTable = QTableWidget()
+#        for row in range(0,len(mirnaHeaders)):
+#            self.mirnaTable.insertColumn(0)
+#        for column in range(0,len(mirnaData)):
+#            self.mirnaTable.insertRow(0)
+#        for row in range(0,len(mirnaData)):
+#            for column in range(0,len(mirnaHeaders)):
+#                item = QTableWidgetItem(str(mirnaData[row][column]))
+#                self.mirnaTable.setItem(row,column,item)
+#        self.mirnaTable.setHorizontalHeaderLabels(mirnaHeaders)
+#        self.grid2.addWidget(self.mirnaTable,0,0)
 
         self.TableDataTab = QWidget()
 
@@ -102,7 +111,7 @@ class DataRep(QWidget):
         self.connect(self.copyAction,SIGNAL("triggered()"),self.copyCells)
 
         tabs.addTab(self.TableDataTab,"Intersection Data")
-        tabs.addTab(self.miRNATab,'Top 25% MiRNAs')
+#        tabs.addTab(self.miRNATab,'Top '+ str(percent) +' MiRNAs')
 
         self.dataTable.connect(self.dataTable,SIGNAL("cellDoubleClicked(int, int)"),self.cellDoubleClickedEvent)
         #TODO: See below - this is the connection call.
@@ -135,9 +144,9 @@ class DataRep(QWidget):
         size =  (int(str(QWidget.size(self)).split("(")[1].split(',')[0])-103)/self.dataTable.columnCount() #The 80 compensates for the scroll bar.
         for head in range(0,self.dataTable.columnCount()):
             self.dataTable.setColumnWidth(head,size)
-        size2 = (int(str(QWidget.size(self)).split("(")[1].split(',')[0])-90)/self.mirnaTable.columnCount()
-        for head in range(0,self.mirnaTable.columnCount()):
-            self.mirnaTable.setColumnWidth(head,size2)
+#        size2 = (int(str(QWidget.size(self)).split("(")[1].split(',')[0])-90)/self.mirnaTable.columnCount()
+#        for head in range(0,self.mirnaTable.columnCount()):
+#            self.mirnaTable.setColumnWidth(head,size2)
         
 
     def filterData(self):
