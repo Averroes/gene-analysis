@@ -241,10 +241,10 @@ class Application(QMainWindow):
         self.analyseButton.setDisabled(False)
         if len(self.analyserThread.miRNA) and len(self.analyserThread.TF):
             self.dataImported = True
-            self.databaseImportButton.setText('Databases Loaded! - Click to Reload :)')
+            self.databaseImportButton.setText('Databases Loaded! - Click to Reload')
         else:
             self.dataImported = False
-            self.databaseImportButton.setText('Database Loading Failed ): - Click to Try Again')
+            self.databaseImportButton.setText('Database Loading Failed - Click to Try Again')
 
     def addToQueue(self):
         """Adds a new gene member (AnalyserThread object) to the queue based on data in textboxes."""
