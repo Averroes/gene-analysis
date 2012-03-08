@@ -33,26 +33,6 @@ def removeDir(dir):
         if dir == directory:
             break
 
-def getTopX(tfs,miRNAs,enrichments, percentile = 25):
-    """This program returns a frequency dictionary for the top 25% of MiRNA's in each tf set of combinations.
-    Should return the most common and most important MiRNA's specific to gene X. Data is used for Word Cloud"""
-    enrichSort = sorted(enrichments,key= lambda x:enrichments[x],reverse=True)
-    percentile = percentile*len(miRNAs)/100
-    topmiRNAs = {}
-    for TF in tfs:
-        x = 0
-        for element in enrichSort:
-            if element[1] == TF:
-                if topmiRNAs.has_key(element[0]):
-                    topmiRNAs[element[0]] += 1
-                else:
-                    topmiRNAs[element[0]] = 1
-                x += 1
-            if not x <= percentile:
-                break
-
-    return topmiRNAs
-
 class Analyser():
     def __init__(self):
         self.stackData = {} #Ongoing data that is congregated though generations.
@@ -171,27 +151,6 @@ class Analyser():
                 #Generates enrichment score
                 enrichment = float(len(intersections[combinationName]))/float(len(set(self.mirnaDic[combinationName[0]])))*100
                 enrichments.update({combinationName:enrichment}) #Creates form Key = (Mirna,TF) and Value = Enrichment Integer
-
-    #FUNCTION TEMPORARILY REMOVED, AS GENERATING TOP(x)Percent TF'S IN DataRep. Therefore no stacking lists.
-#        #Obtains the top 25% of each TF's mirna's based on enrichment score, returning them as a frequency dictionary.
-#        window.feedback('Obtaining frequency list of most common MiRNA\'s for '+str(geneX))
-#        topXpercent = getTopX(Tfs,Mirnas,enrichments,threshold)
-#        if stackable==2:
-#            #TODO: Not sure is this is working as you would want it to.
-#            for mirna in topXpercent:
-#                if self.stackData:
-#                    if mirna in self.stackData.keys():
-#                        newVal = self.stackData[mirna] + topXpercent[mirna]
-#                        self.stackData.update({mirna:newVal})
-#                    else:
-#                        self.stackData.update({mirna:topXpercent[mirna]})
-#                else:
-#                    self.stackData = {mirna:topXpercent[mirna]}
-#            self.stackNames.append(geneX)
-#        else:
-#            self.saveStackData()
-#            self.stackData = {}
-#            self.stackNames = []
 
         #Writes the data to files.
         window.feedback('Writing Data To Files.')

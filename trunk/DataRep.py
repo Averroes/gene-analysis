@@ -27,35 +27,28 @@ class DataRep(QWidget):
         QWidget.setMinimumSize(self,500,200) #Sets a minimum size, smaller wouldn't be any benefit.
 
 
-#        self.miRNATab = QWidget()
+        self.miRNATab = QWidget()
 
-#        for dir,dirs,files in os.walk(geneFolder):
-#            fileNames = files
-#            break
-#        try:
-#            a = fileNames
-#        except AttributeError:
-#            fileNames = ''
-#        search = re.search(' - Top([0-9]*?)Mirna\'s\.txt',str(fileNames),re.IGNORECASE)
-#        percent = search.group(1) if search else '[unknown]'
-#        mirnaFile = open(geneFolder + geneName +  " - Top"+search.group(1)+"Mirna\'s.txt") #Opens the Data file of the gene name.
-#        mirnaHeaders = mirnaFile.readline().replace('\n','').split('\t')
-#        mirnaData = []
-#        for line in mirnaFile:
-#            mirnaData += [line.replace('\n','').split('\t')]
-#        mirnaData = sorted(mirnaData,key=lambda x: int(x[1]),reverse=True)
-#        self.grid2 = QGridLayout(self.miRNATab)
-#        self.mirnaTable = QTableWidget()
-#        for row in range(0,len(mirnaHeaders)):
-#            self.mirnaTable.insertColumn(0)
-#        for column in range(0,len(mirnaData)):
-#            self.mirnaTable.insertRow(0)
-#        for row in range(0,len(mirnaData)):
-#            for column in range(0,len(mirnaHeaders)):
-#                item = QTableWidgetItem(str(mirnaData[row][column]))
-#                self.mirnaTable.setItem(row,column,item)
-#        self.mirnaTable.setHorizontalHeaderLabels(mirnaHeaders)
-#        self.grid2.addWidget(self.mirnaTable,0,0)
+        self.mirnaTable = QTableWidget()
+
+        self.grid2 = QGridLayout(self.miRNATab)
+
+        self.grid2.addWidget(self.mirnaTable, 0, 0, 1, 4)
+        self.grid2.addWidget(QLabel("MiRNA Percentage Threshold:"), 1, 0)
+        self.topMirnaThresholdSlider = QSlider()
+        self.topMirnaThresholdSlider.setOrientation(1) #1 for Horizontal, 2 for Vertical
+        self.topMirnaThresholdSlider.setRange(0,100)
+        self.topMirnaThresholdSlider.setValue(25)
+        self.topMirnaThresholdSlider.setTracking(True)
+        self.connect(self.topMirnaThresholdSlider, SIGNAL("valueChanged(int)"), self.updateThresholdTextbox)
+        self.grid2.addWidget(self.topMirnaThresholdSlider, 1, 1)
+        self.topMirnaThresholdTextbox = QLineEdit(str(25))
+        self.topMirnaThresholdTextbox.setMaximumWidth(32)
+        self.connect(self.topMirnaThresholdTextbox, SIGNAL("textChanged(QString)"), self.updateThresholdSlider)
+        self.grid2.addWidget(self.topMirnaThresholdTextbox, 1, 2)
+        self.topMirnaThresholdApply = QPushButton("Apply")
+        self.connect(self.topMirnaThresholdApply, SIGNAL('clicked()'), self.updateMiRNAThreshold)
+        self.grid2.addWidget(self.topMirnaThresholdApply, 1, 3)
 
         self.TableDataTab = QWidget()
 
@@ -84,6 +77,11 @@ class DataRep(QWidget):
             self.geneData.update({(line[0],line[1]):genes})
         dataFile.close()
 
+        self.mirnaTable.setColumnCount(2)
+        self.mirnaTable.setHorizontalHeaderLabels(["MiRNA", "Frequency"])
+
+        self.updateMiRNAThreshold()
+
         self.grid.addWidget(QLabel("Order by:"), 0, 0)
         self.orderOptions = QComboBox() #Selection Box for Ordering Data.
         for header in headers:
@@ -111,13 +109,13 @@ class DataRep(QWidget):
         self.connect(self.copyAction,SIGNAL("triggered()"),self.copyCells)
 
         tabs.addTab(self.TableDataTab,"Intersection Data")
-#        tabs.addTab(self.miRNATab,'Top '+ str(percent) +' MiRNAs')
+        tabs.addTab(self.miRNATab,'Top MiRNAs')
 
         self.dataTable.connect(self.dataTable,SIGNAL("cellDoubleClicked(int, int)"),self.cellDoubleClickedEvent)
         #TODO: See below - this is the connection call.
 
 #        self.dataTable.connect(self.dataTable,SIGNAL("cellChanged(int, int)"),self.sortBy) #For some reason this code causes a maximum depth/
-#    #Recursion error. Even when using filter function, recursion somehow occurs in a different part of the function. 
+#    #Recursion error. Even when using filter function, recursion somehow occurs in a different part of the function.
 
     def copyCells(self):
         """The Copy Function for the DataTable. Copies a tab-demented form of the table to the windows clipboard.
@@ -197,6 +195,68 @@ class DataRep(QWidget):
         geneViewer = ViewGenes(self.geneData[geneSet],geneSet)
         self.geneDataWindows.append(geneViewer)
         self.geneDataWindows[-1].show()
+
+    def updateThresholdTextbox(self):
+        self.topMirnaThresholdTextbox.setText(str(self.topMirnaThresholdSlider.value()))
+
+    def updateThresholdSlider(self):
+        try:
+            self.topMirnaThresholdSlider.setValue(int(self.topMirnaThresholdTextbox.text()))
+        except:
+            pass
+
+    def updateMiRNAThreshold(self):
+        self.topMiRNA = getTopX(self.processedData, self.topMirnaThresholdSlider.value())
+
+        self.mirnaTable.setRowCount(len(self.topMiRNA))
+        i = 0
+        for mirna in self.topMiRNA:
+            self.mirnaTable.setItem(i, 0, QTableWidgetItem(mirna))
+            self.mirnaTable.setItem(i, 1, QTableWidgetItem(str(self.topMiRNA[mirna])))
+            i += 1
+
+def getTopX(enrichments, percentile = 25):
+    """This program returns a frequency dictionary for the top 25% of MiRNA's in each tf set of combinations.
+    Should return the most common and most important MiRNA's specific to gene X. Data is used for Word Cloud"""
+    enrichSort = sorted(enrichments,key= lambda x:x[2],reverse=True)
+    percentile = (percentile*sum(1 for i in enrichments if i[1] == enrichments[0][1]))/100
+    topmiRNAs = {}
+    TFSums = {}
+
+    for element in enrichSort:
+        if not TFSums.has_key(element[1]):
+            TFSums[element[1]] = 0
+
+        if topmiRNAs.has_key(element[0]):
+            topmiRNAs[element[0]] += (TFSums[element[1]] <= percentile)
+        elif TFSums[element[1]] <= percentile:
+            topmiRNAs[element[0]] = 1
+
+        TFSums[element[1]] += 1
+    return topmiRNAs
+
+    return topmiRNAs
+
+    #FUNCTION TEMPORARILY REMOVED, AS GENERATING TOP(x)Percent TF'S IN DataRep. Therefore no stacking lists.
+#        #Obtains the top 25% of each TF's mirna's based on enrichment score, returning them as a frequency dictionary.
+#        window.feedback('Obtaining frequency list of most common MiRNA\'s for '+str(geneX))
+#        topXpercent = getTopX(Tfs,Mirnas,enrichments,threshold)
+#        if stackable==2:
+#            #TODO: Not sure is this is working as you would want it to.
+#            for mirna in topXpercent:
+#                if self.stackData:
+#                    if mirna in self.stackData.keys():
+#                        newVal = self.stackData[mirna] + topXpercent[mirna]
+#                        self.stackData.update({mirna:newVal})
+#                    else:
+#                        self.stackData.update({mirna:topXpercent[mirna]})
+#                else:
+#                    self.stackData = {mirna:topXpercent[mirna]}
+#            self.stackNames.append(geneX)
+#        else:
+#            self.saveStackData()
+#            self.stackData = {}
+#            self.stackNames = []
 
 class ViewGenes(QWidget):
     def __init__(self,genes,geneSet):
